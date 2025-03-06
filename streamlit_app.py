@@ -70,24 +70,23 @@ if option == 'Препроцессинг данных':
     ax.set_title('Топ признаки, связанные с депрессией', fontsize=16, fontweight='bold')
     st.pyplot(fig)
 
-    # Преобразование признаков
 
-
+    
     st.write("Препроцессинг завершен!")
-ordinal_mapping = {
-    'Sleep Duration': {'Less than 5 hours': 1, '5-6 hours': 2, '7-8 hours': 3, 'More than 8 hours': 4, 'Others': 0},
-    'Dietary Habits': {'Unhealthy': 1, 'Moderate': 2, 'Healthy': 3, 'Others': 0}
-}
-for col, mapping in ordinal_mapping.items():
-    data[col] = data[col].map(mapping)
 
-binary_columns = ['Have you ever had suicidal thoughts ?', 'Family History of Mental Illness']
-for col in binary_columns:
-    data[col] = data[col].map({'Yes': 1, 'No': 0})
-
-data = data.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City', 'Gender'])
-# Раздел 2: Модели и результаты
 elif option == 'Модели и результаты':
+    ordinal_mapping = {
+        'Sleep Duration': {'Less than 5 hours': 1, '5-6 hours': 2, '7-8 hours': 3, 'More than 8 hours': 4, 'Others': 0},
+        'Dietary Habits': {'Unhealthy': 1, 'Moderate': 2, 'Healthy': 3, 'Others': 0}
+    }
+    for col, mapping in ordinal_mapping.items():
+        data[col] = data[col].map(mapping)
+
+    binary_columns = ['Have you ever had suicidal thoughts ?', 'Family History of Mental Illness']
+    for col in binary_columns:
+        data[col] = data[col].map({'Yes': 1, 'No': 0})
+
+    data = data.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City', 'Gender'])
     X = data.drop(columns=['Depression'])
     y = data['Depression']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
