@@ -16,7 +16,11 @@ def load_data():
     data = pd.read_csv("Student Depression Dataset.csv")
     return data
 
-data = load_data()
+# Загружаем данные в глобальную переменную
+if 'data' not in st.session_state:
+    st.session_state.data = load_data()
+
+data = st.session_state.data
 
 # Создаем сайдбар с кнопками
 option = st.sidebar.selectbox('Выберите раздел:', ['Препроцессинг данных', 'Модели и результаты'])
@@ -84,10 +88,15 @@ if option == 'Препроцессинг данных':
 
     data = data.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City', 'Gender'])
 
+    # Сохраняем измененные данные в session_state
+    st.session_state.data = data
+
     st.write("Препроцессинг завершен!")
 
 # Раздел 2: Модели и результаты
 elif option == 'Модели и результаты':
+    data = st.session_state.data  # Загружаем обработанные данные из session_state
+
     X = data.drop(columns=['Depression'])
     y = data['Depression']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
