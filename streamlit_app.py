@@ -64,7 +64,7 @@ def plot_binary_column(col):
     st.pyplot(fig)
 
 # Выбор бинарного признака с помощью выпадающего списка
-selected_column = st.selectbox('Выберите бинарный признак для отображения:', binary_columns)
+selected_column = st.sidebar.selectbox('Выберите бинарный признак для отображения:', binary_columns)
 
 # Отображаем график для выбранного признака
 plot_binary_column(selected_column)
