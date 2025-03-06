@@ -76,6 +76,7 @@ fig_age = px.histogram(data, x='Age', nbins=15, title='Распределени�
 st.plotly_chart(fig_age)
 
 # Тепловая карта корреляции
+numerical_data = data.select_dtypes(include='number')
 num_features = st.sidebar.slider("Выберите количество признаков для отображения на тепловой карте", min_value=1, max_value=len(numerical_data.columns), value=5)
 
 correlation_matrix = numerical_data.corr()
