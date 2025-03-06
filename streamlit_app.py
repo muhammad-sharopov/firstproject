@@ -71,21 +71,21 @@ if option == 'Препроцессинг данных':
     st.pyplot(fig)
 
     # Преобразование признаков
-    ordinal_mapping = {
-        'Sleep Duration': {'Less than 5 hours': 1, '5-6 hours': 2, '7-8 hours': 3, 'More than 8 hours': 4, 'Others': 0},
-        'Dietary Habits': {'Unhealthy': 1, 'Moderate': 2, 'Healthy': 3, 'Others': 0}
-    }
-    for col, mapping in ordinal_mapping.items():
-        data[col] = data[col].map(mapping)
 
-    binary_columns = ['Have you ever had suicidal thoughts ?', 'Family History of Mental Illness']
-    for col in binary_columns:
-        data[col] = data[col].map({'Yes': 1, 'No': 0})
-
-    data = data.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City', 'Gender'])
 
     st.write("Препроцессинг завершен!")
+ordinal_mapping = {
+    'Sleep Duration': {'Less than 5 hours': 1, '5-6 hours': 2, '7-8 hours': 3, 'More than 8 hours': 4, 'Others': 0},
+    'Dietary Habits': {'Unhealthy': 1, 'Moderate': 2, 'Healthy': 3, 'Others': 0}
+}
+for col, mapping in ordinal_mapping.items():
+    data[col] = data[col].map(mapping)
 
+binary_columns = ['Have you ever had suicidal thoughts ?', 'Family History of Mental Illness']
+for col in binary_columns:
+    data[col] = data[col].map({'Yes': 1, 'No': 0})
+
+data = data.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City', 'Gender'])
 # Раздел 2: Модели и результаты
 elif option == 'Модели и результаты':
     X = data.drop(columns=['Depression'])
