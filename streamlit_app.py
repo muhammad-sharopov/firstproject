@@ -115,12 +115,11 @@ binary_columns = ['Have you ever had suicidal thoughts ?', 'Family History of Me
 for col in binary_columns:
     data[col] = data[col].map({'Yes': 1, 'No': 0}) 
 
-# Показать первые несколько строк данных
-st.write('### Обработанные данные')
-st.write(data.head())
-
 # Удаление ненужных колонок
 data = data.drop(columns=['id','Age', 'Degree', 'Profession','Work Pressure','City', 'Gender'])
+
+st.write('### Обработанные данные')
+st.write(data.head())
 
 # Подготовка данных для модели
 X = data.drop(columns=['Depression']) 
