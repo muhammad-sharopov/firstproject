@@ -91,12 +91,16 @@ correlation_matrix = data.select_dtypes(include='number').corr()
 top_features_corr = correlation_matrix['Depression'].abs().sort_values(ascending=False).head(6).index
 top_features_corr = top_features_corr.drop('Depression')
 
-fig, ax = plt.subplots(figsize=(12, 8))
-sns.boxplot(data=data[top_features_corr], palette='Set2', ax=ax)
-ax.set_title('Boxplot для признаков, наиболее связанных с депрессией', fontsize=16, fontweight='bold', color='darkslategray')
-ax.set_xlabel('Признаки', fontsize=14, fontweight='bold', color='darkslategray')
-ax.set_ylabel('Значения', fontsize=14, fontweight='bold', color='darkslategray')
-st.pyplot(fig)
+# Переводим данные в формат для plotly
+data_top_features = data[top_features_corr]
+
+# Переводим данные в длинный формат для plotly
+data_long = data_top_features.melt(var_name='Feature', value_name='Value')
+
+# Создаем интерактивный boxplot
+fig_boxplot = px.box(data_long, x='Feature', y='Value', title='Boxplot для признаков, наиболее связанных с депрессией',
+                     color='Feature', boxmode='overlay')
+st.plotly_chart(fig_boxplot)
 
 # Обработка порядковых признаков
 ordinal_mapping = {
