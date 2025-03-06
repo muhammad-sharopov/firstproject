@@ -30,7 +30,7 @@ if option == 'Статистическое описание':
     st.write(data.describe())
 
 elif option == 'Количество столбцов и строк':
-    st.write(f'Количество строк: {data.shape[0] } столбцов {data.shape[1] } ')
+    st.write(f'Количество строк: {data.shape[0] } столбцов: {data.shape[1] } ')
 
 elif option == 'Типы данных':
     st.write('Типы данных:')
