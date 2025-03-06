@@ -50,7 +50,13 @@ if st.session_state.option == 'Препроцессинг данных':
     st.write(data_copy.isnull().sum())
 
     st.subheader('Распределение по полу')
-    gender_counts = data_copy['Gender'].value_counts()
+    # Сохраняем столбец 'Gender' отдельно для построения графика
+    gender_data = data_copy['Gender'].copy()
+    
+    # Удаляем столбец 'Gender' из основного набора данных для дальнейшей работы
+    data_copy = data_copy.drop(columns=['Gender'])
+
+    gender_counts = gender_data.value_counts()
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.pie(gender_counts, labels=gender_counts.index, autopct='%1.1f%%', startangle=90,
            colors=['#66b3ff', '#ff9999'], shadow=True, explode=(0.05, 0), textprops={'fontsize': 14})
