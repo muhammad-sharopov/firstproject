@@ -26,16 +26,13 @@ data = st.session_state.data
 if 'option' not in st.session_state:
     st.session_state.option = 'Препроцессинг данных'  # Задаем начальный раздел
 
-# Кнопки для навигации
-col1, col2 = st.columns(2)
+# Кнопки для навигации в сайдбаре
+st.sidebar.title('Навигация')
+if st.sidebar.button('Препроцессинг данных'):
+    st.session_state.option = 'Препроцессинг данных'
 
-with col1:
-    if st.button('Препроцессинг данных'):
-        st.session_state.option = 'Препроцессинг данных'
-        
-with col2:
-    if st.button('Модели и результаты'):
-        st.session_state.option = 'Модели и результаты'
+if st.sidebar.button('Модели и результаты'):
+    st.session_state.option = 'Модели и результаты'
 
 # Раздел 1: Препроцессинг данных
 if st.session_state.option == 'Препроцессинг данных':
