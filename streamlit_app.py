@@ -15,39 +15,41 @@ import warnings
 # Отключение предупреждений
 warnings.filterwarnings('ignore')
 
-# Заголовок Streamlit приложения
 st.title('Прогнозирование депрессии у студентов')
 
-# Загрузка данных
-data = pd.read_csv("Student Depression Dataset.csv")
+option = st.radio(
+    "Выберите, что вы хотите увидеть:",
+    ('Информация о данных', 'Статистическое описание', 'Типы данных', 'Количество уникальных значений', 'Мода', 'Пропущенные значения')
+)
 
-# Информация о данных
-st.write('Информация о данных:')
-st.write(data.info())
+if option == 'Информация о данных':
+    st.write('Информация о данных:')
+    st.write(data.info())
 
-# Описание данных
-st.write('Статистическое описание данных:')
-st.write(data.describe())
+elif option == 'Статистическое описание':
+    st.write('Статистическое описание данных:')
+    st.write(data.describe())
 
-# Типы данных
-st.write('Типы данных:')
-st.write(data.dtypes)
+elif option == 'Типы данных':
+    st.write('Типы данных:')
+    st.write(data.dtypes)
 
-# Количество уникальных значений
-st.write('Количество уникальных значений:')
-st.write(data.nunique())
+elif option == 'Количество уникальных значений':
+    st.write('Количество уникальных значений:')
+    st.write(data.nunique())
 
-# Мода
-st.write('Мода:')
-st.write(data.mode().iloc[0])
+elif option == 'Мода':
+    st.write('Мода:')
+    st.write(data.mode().iloc[0])
 
-# Обработка пропущенных значений в столбце 'Financial Stress'
-data['Financial Stress'].fillna(data['Financial Stress'].median(), inplace=True)
-
-# Пропущенные значения после обработки
-st.write('Пропущенные значения после обработки:')
-st.write(data.isnull().sum())
-
+elif option == 'Пропущенные значения':
+    # Обработка пропущенных значений в столбце 'Financial Stress'
+    data['Financial Stress'].fillna(data['Financial Stress'].median(), inplace=True)
+    
+    # Пропущенные значения после обработки
+    st.write('Пропущенные значения после обработки:')
+    st.write(data.isnull().sum())
+       
 # Диаграмма распределения по полу
 st.write('### Распределение по полу')
 gender_counts = data['Gender'].value_counts()
