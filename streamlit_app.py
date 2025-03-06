@@ -22,23 +22,34 @@ if 'data' not in st.session_state:
 
 data = st.session_state.data
 
-# Создаем сайдбар с кнопками
-option = st.sidebar.selectbox('Выберите раздел:', ['Препроцессинг данных', 'Модели и результаты'])
+# Кнопки для навигации
+col1, col2 = st.columns(2)
+
+with col1:
+    if st.button('Препроцессинг данных'):
+        st.session_state.option = 'Препроцессинг данных'
+        
+with col2:
+    if st.button('Модели и результаты'):
+        st.session_state.option = 'Модели и результаты'
 
 # Раздел 1: Препроцессинг данных
-if option == 'Препроцессинг данных':
+if st.session_state.option == 'Препроцессинг данных':
     st.title('Анализ данных о депрессии студентов')
     st.write("Информация о данных:")
     st.write(data.info())
     st.write(data.describe())
 
+    # Создаем копию данных для препроцессинга
+    data_copy = data.copy()
+
     # Заполнение пропусков
-    data['Financial Stress'].fillna(data['Financial Stress'].median(), inplace=True)
+    data_copy['Financial Stress'].fillna(data_copy['Financial Stress'].median(), inplace=True)
     st.write("Пропущенные значения после иммутатции:")
-    st.write(data.isnull().sum())
+    st.write(data_copy.isnull().sum())
 
     st.subheader('Распределение по полу')
-    gender_counts = data['Gender'].value_counts()
+    gender_counts = data_copy['Gender'].value_counts()
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.pie(gender_counts, labels=gender_counts.index, autopct='%1.1f%%', startangle=90,
            colors=['#66b3ff', '#ff9999'], shadow=True, explode=(0.05, 0), textprops={'fontsize': 14})
@@ -47,7 +58,7 @@ if option == 'Препроцессинг данных':
 
     st.subheader('Распределение возрастов')
     fig, ax = plt.subplots(figsize=(8, 6))
-    ax.hist(data['Age'], bins=15, color='skyblue', edgecolor='black')
+    ax.hist(data_copy['Age'], bins=15, color='skyblue', edgecolor='black')
     ax.set_title('Распределение возрастов')
     ax.set_xlabel('Возраст')
     ax.set_ylabel('Частота')
@@ -55,7 +66,7 @@ if option == 'Препроцессинг данных':
     st.pyplot(fig)
 
     st.subheader('Корреляционная матрица')
-    numerical_data = data.select_dtypes(include=['float64', 'int64'])
+    numerical_data = data_copy.select_dtypes(include=['float64', 'int64'])
     correlation_matrix = numerical_data.corr()
 
     fig, ax = plt.subplots(figsize=(12, 10))
@@ -65,12 +76,12 @@ if option == 'Препроцессинг данных':
     st.pyplot(fig)
 
     st.subheader('Топ-5 признаков, связанных с депрессией')
-    correlation_matrix = data.select_dtypes(include='number').corr()
+    correlation_matrix = data_copy.select_dtypes(include='number').corr()
     top_features_corr = correlation_matrix['Depression'].abs().sort_values(ascending=False).head(6).index
     top_features_corr = top_features_corr.drop('Depression')
 
     fig, ax = plt.subplots(figsize=(12, 8))
-    sns.boxplot(data=data[top_features_corr], palette='Set2', ax=ax)
+    sns.boxplot(data=data_copy[top_features_corr], palette='Set2', ax=ax)
     ax.set_title('Топ признаки, связанные с депрессией', fontsize=16, fontweight='bold')
     st.pyplot(fig)
 
@@ -80,25 +91,25 @@ if option == 'Препроцессинг данных':
         'Dietary Habits': {'Unhealthy': 1, 'Moderate': 2, 'Healthy': 3, 'Others': 0}
     }
     for col, mapping in ordinal_mapping.items():
-        data[col] = data[col].map(mapping)
+        data_copy[col] = data_copy[col].map(mapping)
 
     binary_columns = ['Have you ever had suicidal thoughts ?', 'Family History of Mental Illness']
     for col in binary_columns:
-        data[col] = data[col].map({'Yes': 1, 'No': 0})
+        data_copy[col] = data_copy[col].map({'Yes': 1, 'No': 0})
 
-    data = data.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City', 'Gender'])
+    data_copy = data_copy.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City'])
 
     # Сохраняем измененные данные в session_state
-    st.session_state.data = data
+    st.session_state.data = data_copy
 
     st.write("Препроцессинг завершен!")
 
 # Раздел 2: Модели и результаты
-elif option == 'Модели и результаты':
-    data = st.session_state.data  # Загружаем обработанные данные из session_state
+elif st.session_state.option == 'Модели и результаты':
+    data_copy = st.session_state.data  # Загружаем обработанные данные из session_state
 
-    X = data.drop(columns=['Depression'])
-    y = data['Depression']
+    X = data_copy.drop(columns=['Depression'])
+    y = data_copy['Depression']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
     models = {
@@ -167,5 +178,7 @@ elif option == 'Модели и результаты':
     ax.set_xlabel('Предсказанная вероятность')
     ax.set_ylabel('Частота')
     ax.set_title('Гистограмма предсказанных вероятностей')
-    ax.legend(loc='upper center')
+    ax.legend(loc='upper right')
     st.pyplot(fig)
+
+    st.write("Модели и их результаты успешно отображены!")
