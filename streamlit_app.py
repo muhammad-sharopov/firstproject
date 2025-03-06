@@ -11,26 +11,22 @@ import streamlit as st
 import warnings
 warnings.filterwarnings('ignore')
 
-# Загрузка данных
-@st.cache
+@st.cache_data
 def load_data():
     data = pd.read_csv("Student Depression Dataset.csv")
     return data
 
 data = load_data()
 
-# Показ информации о данных
 st.title('Анализ данных о депрессии студентов')
 st.write("Информация о данных:")
 st.write(data.info())
 st.write(data.describe())
 
-# Обработка пропусков и заполнение медианой
 data['Financial Stress'].fillna(data['Financial Stress'].median(), inplace=True)
 st.write("Пропущенные значения после иммутатции:")
 st.write(data.isnull().sum())
 
-# График распределения по полу
 st.subheader('Распределение по полу')
 gender_counts = data['Gender'].value_counts()
 fig, ax = plt.subplots(figsize=(8, 8))
@@ -39,7 +35,6 @@ ax.pie(gender_counts, labels=gender_counts.index, autopct='%1.1f%%', startangle=
 ax.set_title('Распределение по полу', fontsize=16, fontweight='bold', pad=20)
 st.pyplot(fig)
 
-# Гистограмма возрастов
 st.subheader('Распределение возрастов')
 fig, ax = plt.subplots(figsize=(8, 6))
 ax.hist(data['Age'], bins=15, color='skyblue', edgecolor='black')
@@ -49,7 +44,6 @@ ax.set_ylabel('Частота')
 ax.grid(True)
 st.pyplot(fig)
 
-# Корреляционная матрица
 st.subheader('Корреляционная матрица')
 numerical_data = data.select_dtypes(include=['float64', 'int64'])
 correlation_matrix = numerical_data.corr()
@@ -60,7 +54,6 @@ sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidt
 ax.set_title('Корреляционная матрица числовых признаков', fontsize=18, fontweight='bold', pad=20)
 st.pyplot(fig)
 
-# Топ-5 признаков по корреляции с депрессией
 st.subheader('Топ-5 признаков, связанных с депрессией')
 correlation_matrix = data.select_dtypes(include='number').corr()
 top_features_corr = correlation_matrix['Depression'].abs().sort_values(ascending=False).head(6).index
@@ -71,7 +64,6 @@ sns.boxplot(data=data[top_features_corr], palette='Set2', ax=ax)
 ax.set_title('Топ признаки, связанные с депрессией', fontsize=16, fontweight='bold')
 st.pyplot(fig)
 
-# Преобразование данных
 ordinal_mapping = {
     'Sleep Duration': {'Less than 5 hours': 1, '5-6 hours': 2, '7-8 hours': 3, 'More than 8 hours': 4, 'Others': 0},
     'Dietary Habits': {'Unhealthy': 1, 'Moderate': 2, 'Healthy': 3, 'Others': 0}
@@ -88,7 +80,6 @@ X = data.drop(columns=['Depression'])
 y = data['Depression']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-# Определение моделей
 models = {
     'Random Forest': RandomForestClassifier(n_estimators=80, random_state=42),
     'Gradient Boosting': GradientBoostingClassifier(random_state=42),
@@ -96,7 +87,6 @@ models = {
     'XGBoost': xgb.XGBClassifier(n_estimators=100, random_state=42)
 }
 
-# Оценка моделей
 results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC'])
 
 for name, model in models.items():
@@ -115,7 +105,6 @@ for name, model in models.items():
 st.write("Результаты моделей:")
 st.write(results)
 
-# ROC Curve
 st.subheader('ROC-Кривая')
 fig, ax = plt.subplots(figsize=(10, 8))
 for name, model in models.items():
@@ -133,7 +122,6 @@ ax.legend(loc='lower right')
 ax.grid(True)
 st.pyplot(fig)
 
-# Важность признаков
 st.subheader('Важность признаков')
 model = RandomForestClassifier(n_estimators=80, random_state=42)
 model.fit(X_train, y_train)
@@ -149,7 +137,6 @@ ax.set_title('Важность признаков')
 ax.invert_yaxis()
 st.pyplot(fig)
 
-# Гистограмма предсказанных вероятностей
 st.subheader('Гистограмма предсказанных вероятностей')
 y_prob = model.predict_proba(X_test)[:, 1]
 
