@@ -16,11 +16,7 @@ def load_data():
     data = pd.read_csv("Student Depression Dataset.csv")
     return data
 
-# Загружаем данные в глобальную переменную
-if 'data' not in st.session_state:
-    st.session_state.data = load_data()
-
-data = st.session_state.data
+data_copy = load_data()
 
 # Инициализируем "option", если его еще нет
 if 'option' not in st.session_state:
@@ -40,10 +36,7 @@ if st.session_state.option == 'Препроцессинг данных':
     st.write("Информация о данных:")
     st.write(data.info())
     st.write(data.describe())
-
-    # Создаем копию данных для препроцессинга
-    data_copy = data.copy()
-
+    
     # Сохраняем столбец 'Gender' отдельно для построения графика
     gender_data = data_copy['Gender'].copy()
 
@@ -104,16 +97,16 @@ if st.session_state.option == 'Препроцессинг данных':
     for col in binary_columns:
         data_copy[col] = data_copy[col].map({'Yes': 1, 'No': 0})
 
-    data_copy = data_copy.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City'])
+    data = data_copy
+    data = data.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City', 'Gender'])
 
     # Препроцессинг завершен!
     st.write("Препроцессинг завершен!")
 
 # Раздел 2: Модели и результаты
 elif st.session_state.option == 'Модели и результаты':
-    data_copy = data.copy()  # Используем исходные данные для моделей
-    X = data_copy.drop(columns=['Depression'])
-    y = data_copy['Depression']
+    X = data.drop(columns=['Depression'])
+    y = data['Depression']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
     models = {
