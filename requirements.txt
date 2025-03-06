@@ -4,5 +4,4 @@ matplotlib
 sklearn
 seaborn
 xgboost
-warnings
 numpy
