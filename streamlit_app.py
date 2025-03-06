@@ -61,7 +61,7 @@ st.pyplot(fig)
 # Гистограмма распределения по возрасту
 st.write('### Распределение по возрасту')
 fig_age = px.histogram(data, x='Age', nbins=15, title='Распределение по возрасту',
-                        labels={'Age': 'Возраст'}, color='Age', color_continuous_scale='Blues')
+                        labels={'Age': 'Возраст'}, color_discrete_sequence=['skyblue'])
 st.plotly_chart(fig_age)
 
 # Тепловая карта корреляции
