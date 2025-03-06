@@ -12,63 +12,63 @@ from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 import warnings
 
-# Suppress warnings
+# Отключение предупреждений
 warnings.filterwarnings('ignore')
 
-# Streamlit app title
-st.title('Student Depression Prediction')
+# Заголовок Streamlit приложения
+st.title('Прогнозирование депрессии у студентов')
 
-# Load dataset
+# Загрузка данных
 data = pd.read_csv("Student Depression Dataset.csv")
 
-# Show the data info
-st.write('Data Info:')
+# Информация о данных
+st.write('Информация о данных:')
 st.write(data.info())
 
-# Describe the data
-st.write('Data Summary:')
+# Описание данных
+st.write('Статистическое описание данных:')
 st.write(data.describe())
 
-# Show the data types
-st.write('Data Types:')
+# Типы данных
+st.write('Типы данных:')
 st.write(data.dtypes)
 
-# Show the unique counts
-st.write('Unique Counts:')
+# Количество уникальных значений
+st.write('Количество уникальных значений:')
 st.write(data.nunique())
 
-# Show the mode of the data
-st.write('Mode:')
+# Мода
+st.write('Мода:')
 st.write(data.mode().iloc[0])
 
-# Handle missing data in 'Financial Stress'
+# Обработка пропущенных значений в столбце 'Financial Stress'
 data['Financial Stress'].fillna(data['Financial Stress'].median(), inplace=True)
 
-# Display missing data after imputation
-st.write('Missing Data After Imputation:')
+# Пропущенные значения после обработки
+st.write('Пропущенные значения после обработки:')
 st.write(data.isnull().sum())
 
-# Gender distribution pie chart
-st.write('### Gender Distribution')
+# Диаграмма распределения по полу
+st.write('### Распределение по полу')
 gender_counts = data['Gender'].value_counts()
 fig, ax = plt.subplots(figsize=(8, 8))
 ax.pie(gender_counts, labels=gender_counts.index, autopct='%1.1f%%', startangle=90,
        colors=['#66b3ff', '#ff9999'], shadow=True, explode=(0.05, 0), textprops={'fontsize': 14})
-ax.set_title('Gender Distribution', fontsize=16, fontweight='bold', pad=20)
+ax.set_title('Распределение по полу', fontsize=16, fontweight='bold', pad=20)
 st.pyplot(fig)
 
-# Age distribution histogram
-st.write('### Age Distribution')
+# Гистограмма распределения по возрасту
+st.write('### Распределение по возрасту')
 fig, ax = plt.subplots(figsize=(8, 6))
 ax.hist(data['Age'], bins=15, color='skyblue', edgecolor='black')
-ax.set_title('Age Distribution')
-ax.set_xlabel('Age')
-ax.set_ylabel('Frequency')
+ax.set_title('Распределение по возрасту')
+ax.set_xlabel('Возраст')
+ax.set_ylabel('Частота')
 ax.grid(True)
 st.pyplot(fig)
 
-# Correlation matrix heatmap
-st.write('### Correlation Matrix of Numerical Features')
+# Тепловая карта корреляции
+st.write('### Тепловая карта корреляции для числовых признаков')
 numerical_data = data.select_dtypes(include=['float64', 'int64'])
 correlation_matrix = numerical_data.corr()
 
@@ -85,23 +85,23 @@ sns.heatmap(
     annot_kws={'size': 10, 'weight': 'bold'},
     ax=ax
 )
-ax.set_title('Correlation Matrix of Numerical Features', fontsize=18, fontweight='bold', pad=20)
+ax.set_title('Тепловая карта корреляции для числовых признаков', fontsize=18, fontweight='bold', pad=20)
 st.pyplot(fig)
 
-# Boxplot for top features correlated with Depression
-st.write('### Boxplot for Top Features Correlated with Depression')
+# Boxplot для признаков, наиболее связанных с депрессией
+st.write('### Boxplot для признаков, наиболее связанных с депрессией')
 correlation_matrix = data.select_dtypes(include='number').corr()
 top_features_corr = correlation_matrix['Depression'].abs().sort_values(ascending=False).head(6).index
 top_features_corr = top_features_corr.drop('Depression')
 
 fig, ax = plt.subplots(figsize=(12, 8))
 sns.boxplot(data=data[top_features_corr], palette='Set2', ax=ax)
-ax.set_title('Boxplot for Top Features Correlated with Depression', fontsize=16, fontweight='bold', color='darkslategray')
-ax.set_xlabel('Features', fontsize=14, fontweight='bold', color='darkslategray')
-ax.set_ylabel('Values', fontsize=14, fontweight='bold', color='darkslategray')
+ax.set_title('Boxplot для признаков, наиболее связанных с депрессией', fontsize=16, fontweight='bold', color='darkslategray')
+ax.set_xlabel('Признаки', fontsize=14, fontweight='bold', color='darkslategray')
+ax.set_ylabel('Значения', fontsize=14, fontweight='bold', color='darkslategray')
 st.pyplot(fig)
 
-# Handle ordinal mapping
+# Обработка порядковых признаков
 ordinal_mapping = {
     'Sleep Duration': {'Less than 5 hours': 1, '5-6 hours': 2, '7-8 hours': 3, 'More than 8 hours': 4, 'Others': 0},
     'Dietary Habits': {'Unhealthy': 1, 'Moderate': 2, 'Healthy': 3, 'Others': 0}
@@ -110,26 +110,26 @@ ordinal_mapping = {
 for col, mapping in ordinal_mapping.items():
     data[col] = data[col].map(mapping)
 
-# Handle binary columns
+# Обработка бинарных признаков
 binary_columns = ['Have you ever had suicidal thoughts ?', 'Family History of Mental Illness']
 for col in binary_columns:
     data[col] = data[col].map({'Yes': 1, 'No': 0}) 
 
-# Show data head
-st.write('### Processed Data')
+# Показать первые несколько строк данных
+st.write('### Обработанные данные')
 st.write(data.head())
 
-# Drop unnecessary columns
+# Удаление ненужных колонок
 data = data.drop(columns=['id','Age', 'Degree', 'Profession','Work Pressure','City', 'Gender'])
 
-# Prepare data for model
+# Подготовка данных для модели
 X = data.drop(columns=['Depression']) 
 y = data['Depression'] 
 
-# Train-test split
+# Разделение на обучающую и тестовую выборки
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-# Model initialization
+# Инициализация моделей
 models = {
     'Random Forest': RandomForestClassifier(n_estimators=80, random_state=42),
     'Gradient Boosting': GradientBoostingClassifier(random_state=42),
@@ -137,11 +137,11 @@ models = {
     'XGBoost': xgb.XGBClassifier(n_estimators=100, random_state=42)
 }
 
-# Results dataframe
-results = pd.DataFrame(columns=['Model', 'Train ROC AUC', 'Test ROC AUC'])
+# Результаты модели
+results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC'])
 
-# Training models and displaying cross-validation results
-st.write('### Model Training and Evaluation')
+# Обучение моделей и вывод результатов кросс-валидации
+st.write('### Обучение моделей и оценка')
 for name, model in models.items():
     model.fit(X_train, y_train)
     
@@ -152,7 +152,7 @@ for name, model in models.items():
     test_roc_auc = roc_auc_score(y_test, y_test_proba)
     
     results = pd.concat([results, pd.DataFrame({
-        'Model': [name],
+        'Модель': [name],
         'Train ROC AUC': [train_roc_auc],
         'Test ROC AUC': [test_roc_auc]
     })], ignore_index=True)
@@ -164,12 +164,12 @@ for name, model in models.items():
                                               n_jobs=-1,
                                               cv=5
                                               )
-    st.write(f'Cross Validation {name}: {cross_validation_scores.mean()}')
+    st.write(f'Кросс-валидация {name}: {cross_validation_scores.mean()}')
 
 st.write(results)
 
-# ROC curve
-st.write('### ROC Curve')
+# ROC кривая
+st.write('### ROC кривая')
 fig, ax = plt.subplots(figsize=(10, 8))
 
 for name, model in models.items():
@@ -192,8 +192,8 @@ ax.grid(True)
 
 st.pyplot(fig)
 
-# Feature importance plot
-st.write('### Feature Importance')
+# Важность признаков
+st.write('### Важность признаков')
 model = RandomForestClassifier(n_estimators=80, random_state=42)
 model.fit(X_train, y_train)
 importance = model.feature_importances_
@@ -208,15 +208,15 @@ ax.set_title('Feature Importance')
 ax.invert_yaxis() 
 st.pyplot(fig)
 
-# Prediction probability histogram
-st.write('### Prediction Probability Histogram')
+# Гистограмма предсказанных вероятностей
+st.write('### Гистограмма предсказанных вероятностей')
 y_prob = model.predict_proba(X_test)[:, 1]
 
 fig, ax = plt.subplots(figsize=(8, 6))
 ax.hist(y_prob[y_test == 1], bins=20, alpha=0.6, color='blue', label='Actual Yes')
 ax.hist(y_prob[y_test == 0], bins=20, alpha=0.6, color='red', label='Actual No')
-ax.set_xlabel('Predicted Probability')
-ax.set_ylabel('Frequency')
-ax.set_title('Prediction Probability Histogram')
+ax.set_xlabel('Предсказанная вероятность')
+ax.set_ylabel('Частота')
+ax.set_title('Гистограмма предсказанных вероятностей')
 ax.legend(loc='upper center')
 st.pyplot(fig)
