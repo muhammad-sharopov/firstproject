@@ -22,8 +22,12 @@ if 'data' not in st.session_state:
 
 data = st.session_state.data
 
-# Создаем сайдбар с кнопками
-option = st.sidebar.selectbox('Выберите раздел:', ['Препроцессинг данных', 'Модели и результаты'])
+st.sidebar.title('Навигация')
+if st.sidebar.button('Препроцессинг данных'):
+    st.session_state.option = 'Препроцессинг данных'
+
+if st.sidebar.button('Модели и результаты'):
+    st.session_state.option = 'Модели и результаты'
 
 # Раздел 1: Препроцессинг данных
 if option == 'Препроцессинг данных':
