@@ -64,10 +64,11 @@ def plot_binary_column(col):
     ax.set_title(f'Распределение по признаку: {col}', fontsize=16, fontweight='bold', pad=20)
     st.pyplot(fig)
 
-# Создаем кнопку для каждого бинарного признака
-for col in binary_columns:
-    if st.button(f'Показать график для: {col}'):
-        plot_binary_column(col)
+# Выбор бинарного признака с помощью выпадающего списка
+selected_column = st.selectbox('Выберите бинарный признак для отображения:', binary_columns)
+
+# Отображаем график для выбранного признака
+plot_binary_column(selected_column)
 
 # Гистограмма распределения по возрасту
 st.write('### Распределение по возрасту')
