@@ -76,14 +76,18 @@ fig_age = px.histogram(data, x='Age', nbins=15, title='Распределени�
 st.plotly_chart(fig_age)
 
 # Тепловая карта корреляции
-st.write('### Тепловая карта корреляции для числовых признаков')
-numerical_data = data.select_dtypes(include=['float64', 'int64'])
+num_features = st.sidebar.slider("Выберите количество признаков для отображения на тепловой карте", min_value=1, max_value=len(numerical_data.columns), value=5)
+
 correlation_matrix = numerical_data.corr()
+
+top_corr_features = correlation_matrix.abs().nlargest(num_features, 'Depression')
+
+top_corr_matrix = correlation_matrix.loc[top_corr_features.index, top_corr_features.index]
 
 fig, ax = plt.subplots(figsize=(12, 10))
 sns.set_style("white")
 sns.heatmap(
-    correlation_matrix,
+    top_corr_matrix,
     annot=True,
     cmap='coolwarm',
     fmt='.2f',
@@ -93,7 +97,9 @@ sns.heatmap(
     annot_kws={'size': 10, 'weight': 'bold'},
     ax=ax
 )
-ax.set_title('Тепловая карта корреляции для числовых признаков', fontsize=18, fontweight='bold', pad=20)
+
+# Настроим заголовок и отобразим тепловую карту
+ax.set_title(f'Тепловая карта корреляции для топ {num_features} признаков', fontsize=18, fontweight='bold', pad=20)
 st.pyplot(fig)
 
 # Boxplot для признаков, наиболее связанных с депрессией
