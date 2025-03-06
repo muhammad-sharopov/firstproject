@@ -3,6 +3,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import streamlit as st
+import plotly.express as px
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
@@ -50,22 +51,17 @@ elif option == 'Пропущенные значения':
        
 # Диаграмма распределения по полу
 st.write('### Распределение по полу')
-gender_counts = data['Gender'].value_counts()
-fig, ax = plt.subplots(figsize=(8, 8))
-ax.pie(gender_counts, labels=gender_counts.index, autopct='%1.1f%%', startangle=90,
-       colors=['#66b3ff', '#ff9999'], shadow=True, explode=(0.05, 0), textprops={'fontsize': 14})
-ax.set_title('Распределение по полу', fontsize=16, fontweight='bold', pad=20)
-st.pyplot(fig)
+gender_counts = data['Gender'].value_counts().reset_index()
+gender_counts.columns = ['Gender', 'Count']
+fig_gender = px.pie(gender_counts, names='Gender', values='Count', title='Распределение по полу',
+                    color='Gender', color_discrete_map={'Male': '#66b3ff', 'Female': '#ff9999'})
+st.plotly_chart(fig_gender)
 
 # Гистограмма распределения по возрасту
 st.write('### Распределение по возрасту')
-fig, ax = plt.subplots(figsize=(8, 6))
-ax.hist(data['Age'], bins=15, color='skyblue', edgecolor='black')
-ax.set_title('Распределение по возрасту')
-ax.set_xlabel('Возраст')
-ax.set_ylabel('Частота')
-ax.grid(True)
-st.pyplot(fig)
+fig_age = px.histogram(data, x='Age', nbins=15, title='Распределение по возрасту',
+                        labels={'Age': 'Возраст'}, color='Age', color_continuous_scale='Blues')
+st.plotly_chart(fig_age)
 
 # Тепловая карта корреляции
 st.write('### Тепловая карта корреляции для числовых признаков')
