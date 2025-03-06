@@ -30,7 +30,7 @@ if st.sidebar.button('Модели и результаты'):
     st.session_state.option = 'Модели и результаты'
 
 # Раздел 1: Препроцессинг данных
-if option == 'Препроцессинг данных':
+if st.session_state.option == 'Препроцессинг данных':
     st.title('Анализ данных о депрессии студентов')
     st.write("Информация о данных:")
     st.write(data.info())
@@ -98,7 +98,7 @@ if option == 'Препроцессинг данных':
     st.write("Препроцессинг завершен!")
 
 # Раздел 2: Модели и результаты
-elif option == 'Модели и результаты':
+elif st.session_state.option == 'Модели и результаты':
     data = st.session_state.data  # Загружаем обработанные данные из session_state
 
     X = data.drop(columns=['Depression'])
