@@ -44,18 +44,18 @@ if st.session_state.option == 'Препроцессинг данных':
     # Создаем копию данных для препроцессинга
     data_copy = data.copy()
 
+    # Сохраняем столбец 'Gender' отдельно для построения графика
+    gender_data = data_copy['Gender'].copy()
+
+    # Удаляем столбец 'Gender' из основного набора данных для дальнейшей работы
+    data_copy = data_copy.drop(columns=['Gender'])
+
     # Заполнение пропусков
     data_copy['Financial Stress'].fillna(data_copy['Financial Stress'].median(), inplace=True)
     st.write("Пропущенные значения после иммутатции:")
     st.write(data_copy.isnull().sum())
 
     st.subheader('Распределение по полу')
-    # Сохраняем столбец 'Gender' отдельно для построения графика
-    gender_data = data_copy['Gender'].copy()
-    
-    # Удаляем столбец 'Gender' из основного набора данных для дальнейшей работы
-    data_copy = data_copy.drop(columns=['Gender'])
-
     gender_counts = gender_data.value_counts()
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.pie(gender_counts, labels=gender_counts.index, autopct='%1.1f%%', startangle=90,
@@ -106,15 +106,12 @@ if st.session_state.option == 'Препроцессинг данных':
 
     data_copy = data_copy.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City'])
 
-    # Сохраняем измененные данные в session_state
-    st.session_state.data = data_copy
-
+    # Препроцессинг завершен!
     st.write("Препроцессинг завершен!")
 
 # Раздел 2: Модели и результаты
 elif st.session_state.option == 'Модели и результаты':
-    data_copy = st.session_state.data  # Загружаем обработанные данные из session_state
-
+    data_copy = data.copy()  # Используем исходные данные для моделей
     X = data_copy.drop(columns=['Depression'])
     y = data_copy['Depression']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
