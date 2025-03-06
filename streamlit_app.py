@@ -50,20 +50,24 @@ elif option == 'Пропущенные значения':
     st.write(data.isnull().sum())
        
 # Диаграмма распределения по полу
-binary_columns = ['Have you ever had suicidal thoughts ?', 'Family History of Mental Illness']
+binary_columns = ['Gender', 'Have you ever had suicidal thoughts ?', 'Family History of Mental Illness']
+
+# Функция для отображения графиков
+def plot_binary_column(col):
+    st.write(f'### Распределение по признаку: {col}')
+    binary_counts = data[col].value_counts()
+
+    # Строим круговую диаграмму
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ax.pie(binary_counts, labels=binary_counts.index, autopct='%1.1f%%', startangle=90,
+           colors=['#66b3ff', '#ff9999'], shadow=True, explode=(0.05, 0), textprops={'fontsize': 14})
+    ax.set_title(f'Распределение по признаку: {col}', fontsize=16, fontweight='bold', pad=20)
+    st.pyplot(fig)
 
 # Создаем кнопку для каждого бинарного признака
 for col in binary_columns:
     if st.button(f'Показать график для: {col}'):
-        st.write(f'### Распределение по признаку: {col}')
-        binary_counts = data[col].value_counts()
-
-        # Строим круговую диаграмму
-        fig, ax = plt.subplots(figsize=(8, 8))
-        ax.pie(binary_counts, labels=binary_counts.index, autopct='%1.1f%%', startangle=90,
-               colors=['#66b3ff', '#ff9999'], shadow=True, explode=(0.05, 0), textprops={'fontsize': 14})
-        ax.set_title(f'Распределение по признаку: {col}', fontsize=16, fontweight='bold', pad=20)
-        st.pyplot(fig)
+        plot_binary_column(col)
 
 # Гистограмма распределения по возрасту
 st.write('### Распределение по возрасту')
