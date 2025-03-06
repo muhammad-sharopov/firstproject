@@ -41,14 +41,13 @@ elif option == 'Мода':
     st.write('Мода:')
     st.write(data.mode().iloc[0])
     
-data['Financial Stress'].fillna(data['Financial Stress'].median(), inplace=True)
-elif option == 'Пропущенные значения':
-    # Обработка пропущенных значений в столбце 'Financial Stress'
-    
+elif option == 'Пропущенные значения':    
     # Пропущенные значения после обработки
-    st.write('Пропущенные значения после обработки:')
+    st.write('Пропущенные значения:')
     st.write(data.isnull().sum())
-       
+
+data['Financial Stress'].fillna(data['Financial Stress'].median(), inplace=True)
+
 # Диаграмма распределения по полу
 binary_columns = ['Gender', 'Have you ever had suicidal thoughts ?', 'Family History of Mental Illness']
 
