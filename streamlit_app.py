@@ -17,7 +17,7 @@ def load_data():
     return data
 
 data_copy = load_data()
-
+data = None
 # Инициализируем "option", если его еще нет
 if 'option' not in st.session_state:
     st.session_state.option = 'Препроцессинг данных'  # Задаем начальный раздел
