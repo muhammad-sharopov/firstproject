@@ -40,10 +40,10 @@ elif option == 'Количество уникальных значений':
 elif option == 'Мода':
     st.write('Мода:')
     st.write(data.mode().iloc[0])
-
+    
+data['Financial Stress'].fillna(data['Financial Stress'].median(), inplace=True)
 elif option == 'Пропущенные значения':
     # Обработка пропущенных значений в столбце 'Financial Stress'
-    data['Financial Stress'].fillna(data['Financial Stress'].median(), inplace=True)
     
     # Пропущенные значения после обработки
     st.write('Пропущенные значения после обработки:')
