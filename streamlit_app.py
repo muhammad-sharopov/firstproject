@@ -22,6 +22,10 @@ if 'data' not in st.session_state:
 
 data = st.session_state.data
 
+# Инициализируем "option", если его еще нет
+if 'option' not in st.session_state:
+    st.session_state.option = 'Препроцессинг данных'  # Задаем начальный раздел
+
 # Кнопки для навигации
 col1, col2 = st.columns(2)
 
