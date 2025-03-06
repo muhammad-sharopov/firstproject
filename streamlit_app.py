@@ -16,21 +16,13 @@ def load_data():
     data = pd.read_csv("Student Depression Dataset.csv")
     return data
 
-# Загружаем данные в глобальную переменную
-if 'data' not in st.session_state:
-    st.session_state.data = load_data()
+data = load_data()
 
-data = st.session_state.data
-
-st.sidebar.title('Навигация')
-if st.sidebar.button('Препроцессинг данных'):
-    st.session_state.option = 'Препроцессинг данных'
-
-if st.sidebar.button('Модели и результаты'):
-    st.session_state.option = 'Модели и результаты'
+# Создаем сайдбар с кнопками
+option = st.sidebar.selectbox('Выберите раздел:', ['Препроцессинг данных', 'Модели и результаты'])
 
 # Раздел 1: Препроцессинг данных
-if st.session_state.option == 'Препроцессинг данных':
+if option == 'Препроцессинг данных':
     st.title('Анализ данных о депрессии студентов')
     st.write("Информация о данных:")
     st.write(data.info())
@@ -92,15 +84,10 @@ if st.session_state.option == 'Препроцессинг данных':
 
     data = data.drop(columns=['id', 'Age', 'Degree', 'Profession', 'Work Pressure', 'City', 'Gender'])
 
-    # Сохраняем измененные данные в session_state
-    st.session_state.data = data
-
     st.write("Препроцессинг завершен!")
 
 # Раздел 2: Модели и результаты
-elif st.session_state.option == 'Модели и результаты':
-    data = st.session_state.data  # Загружаем обработанные данные из session_state
-
+elif option == 'Модели и результаты':
     X = data.drop(columns=['Depression'])
     y = data['Depression']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
