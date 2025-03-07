@@ -6,4 +6,3 @@ seaborn
 xgboost
 numpy
 plotly
-functools 
