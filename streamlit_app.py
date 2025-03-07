@@ -159,7 +159,7 @@ st.sidebar.header("Настройки моделей")
 # Обновленный код
 
 models = {
-    'Random Forest': RandomForestClassifier(n_estimators=30, random_state=42),
+    'Random Forest': RandomForestClassifier(n_estimators=20, random_state=42),
     'Gradient Boosting': GradientBoostingClassifier(random_state=42),
     'Logistic Regression': LogisticRegression(random_state=42),
     'XGBoost': xgb.XGBClassifier(n_estimators=100, random_state=42)
