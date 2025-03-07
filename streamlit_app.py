@@ -161,7 +161,6 @@ models = {
 
 models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
 
-# ✅ КЕШИРУЕМ ОБУЧЕНИЕ МОДЕЛЕЙ
 @st.cache_resource
 def train_models():
     trained_models = {}
@@ -172,7 +171,6 @@ def train_models():
 
 trained_models = train_models()
 
-# ✅ КЕШИРУЕМ ROC AUC
 @st.cache_data
 def compute_roc_auc():
     results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC'])
@@ -193,7 +191,6 @@ def compute_roc_auc():
 st.write('### Обучение моделей и оценка')
 st.write(compute_roc_auc())
 
-# ✅ КЕШИРУЕМ КРОСС-ВАЛИДАЦИЮ
 @st.cache_data
 def cross_validation_results():
     cv_results = {}
