@@ -13,7 +13,6 @@ from sklearn.metrics import roc_auc_score, accuracy_score, roc_curve, auc
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 import warnings
-from streamlit import caching
 
 # Отключение предупреждений
 warnings.filterwarnings('ignore')
@@ -167,7 +166,8 @@ results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC']
 # Обучение моделей и вывод результатов кросс-валидации
 st.write('### Обучение моделей и оценка')
 
-@st.cache
+# Использование st.cache_data для кэширования
+@st.cache_data
 def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
     model.fit(X_train, y_train)
     
@@ -190,7 +190,8 @@ for name, model in models.items():
 
 st.write(results)
 
-@st.cache
+# Использование кэширования для кросс-валидации
+@st.cache_data
 def cross_validation(model, X_train, y_train):
     return cross_val_score(estimator=model,
                            X=X_train.sample(7000, random_state=42),
@@ -211,7 +212,7 @@ selected_models = st.sidebar.multiselect(
 )
 
 # Создание интерактивного ROC-графика
-@st.cache
+@st.cache_data
 def generate_roc_curve(selected_models, X_train, X_test, y_test):
     fig = go.Figure()
 
