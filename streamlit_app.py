@@ -255,6 +255,17 @@ fig.update_layout(
 # Отображение графика
 st.plotly_chart(fig)
 
+@st.cache_data
+def compute_feature_importance():
+    model = RandomForestClassifier(n_estimators=80, random_state=42)
+    model.fit(X_train, y_train)  # Обучение модели
+    importance = model.feature_importances_
+    features = X_train.columns
+    return pd.DataFrame({'Feature': features, 'Importance': importance}).sort_values(by='Importance', ascending=False)
+
+# Вычисляем важность признаков
+importance_df = compute_feature_importance()
+
 # Выбор признаков через sidebar
 st.sidebar.write("### Выберите признаки для отображения:")
 selected_features = st.sidebar.multiselect(
