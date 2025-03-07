@@ -167,7 +167,6 @@ models = {
 # Гиперпараметры для разных моделей
 selected_model = st.sidebar.selectbox("Выберите модель", options=list(models.keys()))
 
-# Гиперпараметры
 C = None
 penalty = None
 solver = None
@@ -176,11 +175,16 @@ learning_rate = None
 max_depth = None
 max_features = None
 
-# Гиперпараметры для каждой модели
+# Гиперпараметры для моделей
 if selected_model == 'Logistic Regression':
     C = st.sidebar.slider("C", min_value=0.001, max_value=10.0, step=0.001, value=1.0)
     penalty = st.sidebar.selectbox("Penalty", options=['l1', 'l2'])
-    solver = 'liblinear' if penalty == 'l1' else 'lbfgs'
+    
+    if penalty == 'l1':
+        solver = 'liblinear' 
+    else:
+        solver = 'lbfgs'
+
     model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
 
 elif selected_model == 'Random Forest':
@@ -205,30 +209,28 @@ elif selected_model == 'Gradient Boosting':
 @st.cache_data
 def train_models(C, penalty, solver, n_estimators, learning_rate, max_depth, max_features):
     trained_models = {}
-    
-    # Обучаем все выбранные модели
-    for model_name in models:
-        if model_name == 'Logistic Regression':
-            model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
-        elif model_name == 'Random Forest':
-            model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, max_features=max_features, random_state=42)
-        elif model_name == 'XGBoost':
-            model = xgb.XGBClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
-        elif model_name == 'Gradient Boosting':
-            model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
+    if selected_model == 'Logistic Regression':
+        model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
+    elif selected_model == 'Random Forest':
+        model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, 
+                                       max_features=max_features, random_state=42)
+    elif selected_model == 'XGBoost':
+        model = xgb.XGBClassifier(n_estimators=n_estimators, learning_rate=learning_rate, 
+                                  max_depth=max_depth, random_state=42)
+    elif selected_model == 'Gradient Boosting':
+        model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, 
+                                           max_depth=max_depth, random_state=42)
 
-        model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
-        trained_models[model_name] = model
-
+    # Обучаем модель
+    model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
+    trained_models[selected_model] = model
     return trained_models
 
 # Функция для вычисления ROC AUC
 @st.cache_data
-def compute_roc_auc(_trained_models, X_train, y_train, X_test, y_test):
+def compute_roc_auc(trained_models, X_train, y_train, X_test, y_test):
     results = pd.DataFrame(columns=['Model', 'Train ROC AUC', 'Test ROC AUC'])
-    
-    # Вычисляем ROC AUC для всех моделей
-    for name, model in _trained_models.items():
+    for name, model in trained_models.items():
         y_train_proba = model.predict_proba(X_train.sample(10000, random_state=42))[:, 1]
         y_test_proba = model.predict_proba(X_test)[:, 1]
 
@@ -240,19 +242,14 @@ def compute_roc_auc(_trained_models, X_train, y_train, X_test, y_test):
             'Train ROC AUC': [train_roc_auc],
             'Test ROC AUC': [test_roc_auc]
         })], ignore_index=True)
-    
     return results
 
-# Обучаем все модели
-trained_models = train_models(C, penalty, solver, n_estimators, learning_rate, max_depth, max_features)
-
-# Передаем все модели в функцию для вычисления ROC AUC
-results = compute_roc_auc(trained_models, X_train, y_train, X_test, y_test)
+trained_models = train_models(C, penalty, solver, n_estimators, learning_rate, max_depth, max_features)  # Обучаем модели
+results = compute_roc_auc(trained_models, X_train, y_train, X_test, y_test)  # Передаем все необходимые аргументы
 
 # Отображаем результаты
 st.write('### Training Models and Evaluation')
 st.write(results)
-
 
 # Кросс-валидация
 @st.cache_data
