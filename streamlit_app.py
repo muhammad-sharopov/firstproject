@@ -161,7 +161,7 @@ models = {
     'Logistic Regression': LogisticRegression(),
     'Random Forest': RandomForestClassifier(),
     'XGBoost': xgb.XGBClassifier(),
-    'Gradient Boosting': GradientBoostingClassifier()  # Добавили Gradient Boosting
+    'Gradient Boosting': GradientBoostingClassifier()
 }
 
 # Гиперпараметры для разных моделей
@@ -185,7 +185,6 @@ if selected_model == 'Logistic Regression':
     else:
         solver = 'lbfgs'
 
-    model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
 
 elif selected_model == 'Random Forest':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
@@ -243,16 +242,13 @@ def compute_roc_auc(_trained_models, X_train, y_train, X_test, y_test):
         })], ignore_index=True)
     return results
 
-trained_models = train_models(selected_model, C, penalty, solver, n_estimators, max_depth)  # Вы тренируете модель
+# Передача всех необходимых аргументов
+trained_models = train_models(selected_model, C, penalty, solver, n_estimators, learning_rate, max_depth, max_features)  
 results = compute_roc_auc(trained_models, X_train, y_train, X_test, y_test)  # Передаем все необходимые аргументы
 
 # Отображаем результаты
-st.write(results)
-
-
-# Отображаем результаты
 st.write('### Training Models and Evaluation')
-st.write(compute_roc_auc())
+st.write(results)
 
 # Кросс-валидация
 @st.cache_data
