@@ -243,12 +243,12 @@ def compute_roc_auc(_trained_models, X_train, y_train, X_test, y_test):
         })], ignore_index=True)
     return results
 
-# Обучаем модели и вычисляем ROC AUC
-trained_models = train_models(selected_model, C, penalty, solver, n_estimators, learning_rate, max_depth, max_features)
-results = compute_roc_auc(trained_models, X_train, y_train, X_test, y_test)
+trained_models = train_models(selected_model, C, penalty, solver, n_estimators, max_depth)  # Вы тренируете модель
+results = compute_roc_auc(trained_models, X_train, y_train, X_test, y_test)  # Передаем все необходимые аргументы
 
 # Отображаем результаты
 st.write(results)
+
 
 # Отображаем результаты
 st.write('### Training Models and Evaluation')
