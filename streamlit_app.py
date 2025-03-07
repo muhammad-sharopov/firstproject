@@ -179,7 +179,13 @@ max_features = None
 if selected_model == 'Logistic Regression':
     C = st.sidebar.slider("C", min_value=0.001, max_value=10.0, step=0.001, value=1.0)
     penalty = st.sidebar.selectbox("Penalty", options=['l1', 'l2'])
-    solver = st.sidebar.selectbox("Solver", options=['lbfgs', 'liblinear'])
+    
+    if penalty == 'l1':
+        solver = 'liblinear' 
+    else:
+        solver = 'lbfgs'
+
+    model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
 
 elif selected_model == 'Random Forest':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
