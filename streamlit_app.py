@@ -156,14 +156,50 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 st.sidebar.header("Настройки моделей")
 
 models = {
-    'Random Forest': RandomForestClassifier(n_estimators=80, random_state=42),
+    'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42),
     'Gradient Boosting': GradientBoostingClassifier(random_state=42),
     'Logistic Regression': LogisticRegression(random_state=42),
     'XGBoost': xgb.XGBClassifier(n_estimators=100, random_state=42)
 }
 
+# Models for cross-validation (excluding XGBoost)
 models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
 
+# Sidebar model selection
+selected_model = st.sidebar.selectbox("Choose a model", options=list(models.keys()))
+
+# Hyperparameters for LogisticRegression
+if selected_model == 'Logistic Regression':
+    C = st.sidebar.slider("C", min_value=0.001, max_value=10.0, step=0.001, value=1.0)
+    penalty = st.sidebar.selectbox("Penalty", options=['l1', 'l2'])
+    solver = st.sidebar.selectbox("Solver", options=['lbfgs', 'liblinear'])
+    model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
+
+# Hyperparameters for KNeighborsClassifier
+elif selected_model == 'KNeighborsClassifier':
+    n_neighbors = st.sidebar.slider("n_neighbors", min_value=1, max_value=20, step=1, value=5)
+    weights = st.sidebar.selectbox("Weights", options=['uniform', 'distance'])
+    metric = st.sidebar.selectbox("Metric", options=['minkowski', 'euclidean', 'manhattan'])
+    model = KNeighborsClassifier(n_neighbors=n_neighbors, weights=weights, metric=metric)
+
+# Hyperparameters for RandomForestClassifier
+elif selected_model == 'Random Forest':
+    n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
+    max_depth = st.sidebar.selectbox("Max Depth", options=[None, 3, 5, 7, 10])
+    min_samples_split = st.sidebar.selectbox("Min Samples Split", options=[2, 5, 10])
+    min_samples_leaf = st.sidebar.selectbox("Min Samples Leaf", options=[1, 2, 5, 10])
+    max_features = st.sidebar.selectbox("Max Features", options=['sqrt', 'log2', None])
+    model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
+                                   min_samples_leaf=min_samples_leaf, max_features=max_features, random_state=42)
+
+# Hyperparameters for XGBoost
+elif selected_model == 'XGBoost':
+    n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
+    learning_rate = st.sidebar.slider("Learning Rate", min_value=0.01, max_value=0.3, step=0.01, value=0.1)
+    max_depth = st.sidebar.slider("Max Depth", min_value=3, max_value=10, step=1, value=6)
+    model = xgb.XGBClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
+
+# Cache the training process
 @st.cache_resource
 def train_models():
     trained_models = {}
@@ -174,9 +210,10 @@ def train_models():
 
 trained_models = train_models()
 
+# Compute ROC AUC
 @st.cache_data
 def compute_roc_auc():
-    results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC'])
+    results = pd.DataFrame(columns=['Model', 'Train ROC AUC', 'Test ROC AUC'])
     for name, model in trained_models.items():
         y_train_proba = model.predict_proba(X_train.sample(10000, random_state=42))[:, 1]
         y_test_proba = model.predict_proba(X_test)[:, 1]
@@ -185,15 +222,17 @@ def compute_roc_auc():
         test_roc_auc = roc_auc_score(y_test, y_test_proba)
 
         results = pd.concat([results, pd.DataFrame({
-            'Модель': [name],
+            'Model': [name],
             'Train ROC AUC': [train_roc_auc],
             'Test ROC AUC': [test_roc_auc]
         })], ignore_index=True)
     return results
 
-st.write('### Обучение моделей и оценка')
+# Display results
+st.write('### Training Models and Evaluation')
 st.write(compute_roc_auc())
 
+# Cross-validation
 @st.cache_data
 def cross_validation_results():
     cv_results = {}
@@ -211,7 +250,7 @@ def cross_validation_results():
 
 cv_scores = cross_validation_results()
 for name, score in cv_scores.items():
-    st.write(f'Кросс-валидация {name} на (Accuracy): {score}')
+    st.write(f'Cross-validation {name} (Accuracy): {score}')
 
 
 @st.cache_data
