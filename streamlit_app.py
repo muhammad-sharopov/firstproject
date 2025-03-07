@@ -204,7 +204,7 @@ elif selected_model == 'Gradient Boosting':
     model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
 
 # Функция для обучения моделей
-@st.cache_resource(allow_output_mutation=True)
+@st.cache_data
 def train_models():
     trained_models = {}
     for name, model in models.items():
@@ -256,6 +256,25 @@ cv_scores = cross_validation_results()
 for name, score in cv_scores.items():
     st.write(f'Cross-validation {name} (Accuracy): {score}')
 
+# Сохранение результатов ROC
+@st.cache_data
+def train_and_get_roc_data():
+    roc_data = {}
+    for name, model in models.items():
+        model.fit(X_train.sample(7000, random_state=42), y_train.sample(7000, random_state=42))
+        y_proba = model.predict_proba(X_test)[:, 1]
+        fpr, tpr, _ = roc_curve(y_test, y_proba)
+        roc_auc = auc(fpr, tpr)
+        roc_data[name] = (fpr, tpr, roc_auc)
+    return roc_data
+
+roc_data = train_and_get_roc_data()
+
+# Отображаем все модели в боковой панели
+st.sidebar.write("### Выберите модели для отображения:")
+selected_models = st.sidebar.multiselect(
+    "Модели:", list(models.keys()), default=list(models.keys())
+)
 # Сохранение результатов ROC
 @st.cache_data
 def train_and_get_roc_data():
