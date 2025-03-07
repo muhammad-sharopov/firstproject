@@ -13,6 +13,7 @@ import xgboost as xgb
 from sklearn.metrics import roc_auc_score, accuracy_score, roc_curve, auc
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import GridSearchCV
 import warnings
 
 # Отключение предупреждений
