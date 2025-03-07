@@ -166,24 +166,29 @@ models = {
 models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
 
 # Sidebar model selection
-selected_model = st.sidebar.selectbox("Choose a model", options=list(models.keys()))
+models = {
+    'Logistic Regression': LogisticRegression(),
+    'KNeighborsClassifier': KNeighborsClassifier(),
+    'Random Forest': RandomForestClassifier(),
+    'XGBoost': xgb.XGBClassifier(),
+    'Gradient Boosting': GradientBoostingClassifier()  # Добавили Gradient Boosting
+}
 
-# Hyperparameters for LogisticRegression
+# Гиперпараметры для разных моделей
+selected_model = st.sidebar.selectbox("Выберите модель", options=list(models.keys()))
+
 if selected_model == 'Logistic Regression':
     C = st.sidebar.slider("C", min_value=0.001, max_value=10.0, step=0.001, value=1.0)
     penalty = st.sidebar.selectbox("Penalty", options=['l1', 'l2'])
     solver = st.sidebar.selectbox("Solver", options=['lbfgs', 'liblinear'])
     model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
 
-# Hyperparameters for KNeighborsClassifier
 elif selected_model == 'KNeighborsClassifier':
     n_neighbors = st.sidebar.slider("n_neighbors", min_value=1, max_value=20, step=1, value=5)
     weights = st.sidebar.selectbox("Weights", options=['uniform', 'distance'])
     metric = st.sidebar.selectbox("Metric", options=['minkowski', 'euclidean', 'manhattan'])
     model = KNeighborsClassifier(n_neighbors=n_neighbors, weights=weights, metric=metric)
 
-# Hyperparameters for RandomForestClassifier
-# Hyperparameters for RandomForestClassifier using sliders
 elif selected_model == 'Random Forest':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
     max_depth = st.sidebar.slider("Max Depth", min_value=1, max_value=10, step=1, value=7)
@@ -193,15 +198,20 @@ elif selected_model == 'Random Forest':
     model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
                                    min_samples_leaf=min_samples_leaf, max_features=max_features, random_state=42)
 
-# Hyperparameters for XGBoost
 elif selected_model == 'XGBoost':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
     learning_rate = st.sidebar.slider("Learning Rate", min_value=0.01, max_value=0.3, step=0.01, value=0.1)
     max_depth = st.sidebar.slider("Max Depth", min_value=3, max_value=10, step=1, value=6)
     model = xgb.XGBClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
 
-# Cache the training process
-@st.cache_resource
+elif selected_model == 'Gradient Boosting':
+    n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
+    learning_rate = st.sidebar.slider("Learning Rate", min_value=0.01, max_value=0.3, step=0.01, value=0.1)
+    max_depth = st.sidebar.slider("Max Depth", min_value=3, max_value=10, step=1, value=3)
+    model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
+
+# Функция для обучения моделей
+@st.cache_resource(allow_output_mutation=True)
 def train_models():
     trained_models = {}
     for name, model in models.items():
@@ -211,7 +221,7 @@ def train_models():
 
 trained_models = train_models()
 
-# Compute ROC AUC
+# Функция для вычисления ROC AUC
 @st.cache_data
 def compute_roc_auc():
     results = pd.DataFrame(columns=['Model', 'Train ROC AUC', 'Test ROC AUC'])
@@ -229,15 +239,15 @@ def compute_roc_auc():
         })], ignore_index=True)
     return results
 
-# Display results
+# Отображаем результаты
 st.write('### Training Models and Evaluation')
 st.write(compute_roc_auc())
 
-# Cross-validation
+# Кросс-валидация
 @st.cache_data
 def cross_validation_results():
     cv_results = {}
-    for name, model in models_for_cv.items():
+    for name, model in models.items():
         scores = cross_val_score(
             estimator=model,
             X=X_train.sample(7000, random_state=42),
@@ -253,7 +263,7 @@ cv_scores = cross_validation_results()
 for name, score in cv_scores.items():
     st.write(f'Cross-validation {name} (Accuracy): {score}')
 
-
+# Сохранение результатов ROC
 @st.cache_data
 def train_and_get_roc_data():
     roc_data = {}
@@ -267,6 +277,7 @@ def train_and_get_roc_data():
 
 roc_data = train_and_get_roc_data()
 
+# Отображаем все модели в боковой панели
 st.sidebar.write("### Выберите модели для отображения:")
 selected_models = st.sidebar.multiselect(
     "Модели:", list(models.keys()), default=list(models.keys())
