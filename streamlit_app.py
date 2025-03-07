@@ -157,6 +157,8 @@ st.sidebar.header("Настройки моделей")
 
 
 # Sidebar model selection
+# Исправленный код для Streamlit
+
 models = {
     'Logistic Regression': LogisticRegression(),
     'Random Forest': RandomForestClassifier(),
@@ -167,6 +169,7 @@ models = {
 # Гиперпараметры для разных моделей
 selected_model = st.sidebar.selectbox("Выберите модель", options=list(models.keys()))
 
+# Гиперпараметры
 C = None
 penalty = None
 solver = None
@@ -175,43 +178,39 @@ learning_rate = None
 max_depth = None
 max_features = None
 
-# Гиперпараметры для моделей
+# Гиперпараметры для каждой модели
 if selected_model == 'Logistic Regression':
     C = st.sidebar.slider("C", min_value=0.001, max_value=10.0, step=0.001, value=1.0)
     penalty = st.sidebar.selectbox("Penalty", options=['l1', 'l2'])
-    
-    if penalty == 'l1':
-        solver = 'liblinear' 
-    else:
-        solver = 'lbfgs'
-
+    solver = 'liblinear' if penalty == 'l1' else 'lbfgs'
+    model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
 
 elif selected_model == 'Random Forest':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
     max_depth = st.sidebar.slider("Max Depth", min_value=1, max_value=10, step=1, value=7)
-    min_samples_split = st.sidebar.slider("Min Samples Split", min_value=2, max_value=10, step=1, value=2)
-    min_samples_leaf = st.sidebar.slider("Min Samples Leaf", min_value=1, max_value=10, step=1, value=1)
     max_features = st.sidebar.selectbox("Max Features", options=['sqrt', 'log2', None])
+    model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, max_features=max_features, random_state=42)
 
 elif selected_model == 'XGBoost':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
     learning_rate = st.sidebar.slider("Learning Rate", min_value=0.01, max_value=0.3, step=0.01, value=0.1)
     max_depth = st.sidebar.slider("Max Depth", min_value=3, max_value=10, step=1, value=6)
+    model = xgb.XGBClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
 
 elif selected_model == 'Gradient Boosting':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
     learning_rate = st.sidebar.slider("Learning Rate", min_value=0.01, max_value=0.3, step=0.01, value=0.1)
     max_depth = st.sidebar.slider("Max Depth", min_value=3, max_value=10, step=1, value=3)
+    model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
 
-# Функция для обучения моделей с гиперпараметрами
-@st.cache_data
+# Функция для обучения модели с параметрами
+@st.experimental_memo
 def train_models(selected_model, C, penalty, solver, n_estimators, learning_rate, max_depth, max_features):
     trained_models = {}
     if selected_model == 'Logistic Regression':
         model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
     elif selected_model == 'Random Forest':
         model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, 
-                                       min_samples_split=2, min_samples_leaf=1, 
                                        max_features=max_features, random_state=42)
     elif selected_model == 'XGBoost':
         model = xgb.XGBClassifier(n_estimators=n_estimators, learning_rate=learning_rate, 
@@ -224,8 +223,11 @@ def train_models(selected_model, C, penalty, solver, n_estimators, learning_rate
     trained_models[selected_model] = model
     return trained_models
 
+# Вызываем функцию для обучения модели
+trained_models = train_models(selected_model, C, penalty, solver, n_estimators, learning_rate, max_depth, max_features)
+
 # Функция для вычисления ROC AUC
-@st.cache_data
+@st.experimental_memo
 def compute_roc_auc(_trained_models, X_train, y_train, X_test, y_test):
     results = pd.DataFrame(columns=['Model', 'Train ROC AUC', 'Test ROC AUC'])
     for name, model in _trained_models.items():
@@ -242,9 +244,8 @@ def compute_roc_auc(_trained_models, X_train, y_train, X_test, y_test):
         })], ignore_index=True)
     return results
 
-# Передача всех необходимых аргументов
-trained_models = train_models(selected_model, C, penalty, solver, n_estimators, learning_rate, max_depth, max_features)  
-results = compute_roc_auc(trained_models, X_train, y_train, X_test, y_test)  # Передаем все необходимые аргументы
+# Передаем все аргументы для вычисления ROC AUC
+results = compute_roc_auc(trained_models, X_train, y_train, X_test, y_test)
 
 # Отображаем результаты
 st.write('### Training Models and Evaluation')
