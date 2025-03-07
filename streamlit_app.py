@@ -261,11 +261,6 @@ def train_and_get_roc_data():
 
 roc_data = train_and_get_roc_data()
 
-# Отображаем все модели в боковой панели
-st.sidebar.write("### Выберите модели для отображения:")
-selected_models = st.sidebar.multiselect(
-    "Модели:", list(models.keys()), default=list(models.keys())
-)
 # Сохранение результатов ROC
 @st.cache_data
 def train_and_get_roc_data():
