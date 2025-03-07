@@ -184,7 +184,7 @@ for name, model in models.items():
                                               y=y_train,
                                               scoring='accuracy',
                                               n_jobs=-1,
-                                              cv=5
+                                              cv=3
                                               )
     st.write(f'Кросс-валидация {name} на (Accuracy): {cross_validation_scores.mean()}')
 
