@@ -158,78 +158,27 @@ st.sidebar.header("Настройки моделей")
 # Обновленный код
 
 models = {
-    'Logistic Regression': LogisticRegression(),
-    'Random Forest': RandomForestClassifier(),
-    'XGBoost': xgb.XGBClassifier(),
-    'Gradient Boosting': GradientBoostingClassifier()
+    'Random Forest': RandomForestClassifier(n_estimators=80, random_state=42),
+    'Gradient Boosting': GradientBoostingClassifier(random_state=42),
+    'Logistic Regression': LogisticRegression(random_state=42),
+    'XGBoost': xgb.XGBClassifier(n_estimators=100, random_state=42)
 }
 
-# Гиперпараметры для разных моделей
-selected_model = st.sidebar.selectbox("Выберите модель", options=list(models.keys()))
+models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
 
-C = None
-penalty = None
-solver = None
-n_estimators = None
-learning_rate = None
-max_depth = None
-max_features = None
-
-# Гиперпараметры для моделей
-if selected_model == 'Logistic Regression':
-    C = st.sidebar.slider("C", min_value=0.001, max_value=10.0, step=0.001, value=1.0)
-    penalty = st.sidebar.selectbox("Penalty", options=['l1', 'l2'])
-    
-    if penalty == 'l1':
-        solver = 'liblinear' 
-    else:
-        solver = 'lbfgs'
-
-    model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
-
-elif selected_model == 'Random Forest':
-    n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
-    max_depth = st.sidebar.slider("Max Depth", min_value=1, max_value=10, step=1, value=7)
-    max_features = st.sidebar.selectbox("Max Features", options=['sqrt', 'log2', None])
-    model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, max_features=max_features, random_state=42)
-
-elif selected_model == 'XGBoost':
-    n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
-    learning_rate = st.sidebar.slider("Learning Rate", min_value=0.01, max_value=0.3, step=0.01, value=0.1)
-    max_depth = st.sidebar.slider("Max Depth", min_value=3, max_value=10, step=1, value=6)
-    model = xgb.XGBClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
-
-elif selected_model == 'Gradient Boosting':
-    n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
-    learning_rate = st.sidebar.slider("Learning Rate", min_value=0.01, max_value=0.3, step=0.01, value=0.1)
-    max_depth = st.sidebar.slider("Max Depth", min_value=3, max_value=10, step=1, value=3)
-    model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
-
-# Функция для обучения моделей с гиперпараметрами
-@st.cache_data
-def train_models(C, penalty, solver, n_estimators, learning_rate, max_depth, max_features):
+@st.cache_resource
+def train_models():
     trained_models = {}
-    if selected_model == 'Logistic Regression':
-        model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
-    elif selected_model == 'Random Forest':
-        model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, 
-                                       max_features=max_features, random_state=42)
-    elif selected_model == 'XGBoost':
-        model = xgb.XGBClassifier(n_estimators=n_estimators, learning_rate=learning_rate, 
-                                  max_depth=max_depth, random_state=42)
-    elif selected_model == 'Gradient Boosting':
-        model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, 
-                                           max_depth=max_depth, random_state=42)
-
-    # Обучаем модель
-    model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
-    trained_models[selected_model] = model
+    for name, model in models.items():
+        model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
+        trained_models[name] = model
     return trained_models
 
-# Функция для вычисления ROC AUC
+trained_models = train_models()
+
 @st.cache_data
-def compute_roc_auc(trained_models, X_train, y_train, X_test, y_test):
-    results = pd.DataFrame(columns=['Model', 'Train ROC AUC', 'Test ROC AUC'])
+def compute_roc_auc():
+    results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC'])
     for name, model in trained_models.items():
         y_train_proba = model.predict_proba(X_train.sample(10000, random_state=42))[:, 1]
         y_test_proba = model.predict_proba(X_test)[:, 1]
@@ -238,24 +187,19 @@ def compute_roc_auc(trained_models, X_train, y_train, X_test, y_test):
         test_roc_auc = roc_auc_score(y_test, y_test_proba)
 
         results = pd.concat([results, pd.DataFrame({
-            'Model': [name],
+            'Модель': [name],
             'Train ROC AUC': [train_roc_auc],
             'Test ROC AUC': [test_roc_auc]
         })], ignore_index=True)
     return results
 
-trained_models = train_models(C, penalty, solver, n_estimators, learning_rate, max_depth, max_features)  # Обучаем модели
-results = compute_roc_auc(trained_models, X_train, y_train, X_test, y_test)  # Передаем все необходимые аргументы
+st.write('### Обучение моделей и оценка')
+st.write(compute_roc_auc())
 
-# Отображаем результаты
-st.write('### Training Models and Evaluation')
-st.write(results)
-
-# Кросс-валидация
 @st.cache_data
 def cross_validation_results():
     cv_results = {}
-    for name, model in models.items():
+    for name, model in models_for_cv.items():
         scores = cross_val_score(
             estimator=model,
             X=X_train.sample(7000, random_state=42),
@@ -269,7 +213,7 @@ def cross_validation_results():
 
 cv_scores = cross_validation_results()
 for name, score in cv_scores.items():
-    st.write(f'Cross-validation {name} (Accuracy): {score}')
+    st.write(f'Кросс-валидация {name} на (Accuracy): {score}')
 
 # Сохранение результатов ROC
 @st.cache_data
