@@ -239,20 +239,25 @@ fig.update_layout(
 # Отображение графика
 st.plotly_chart(fig)
 
-# Важность признаков
-st.write('### Важность признаков')
-model = RandomForestClassifier(n_estimators=80, random_state=42)
-model.fit(X_train, y_train)
-importance = model.feature_importances_
-features = X_train.columns
-importance_df = pd.DataFrame({'Feature': features, 'Importance': importance}).sort_values(by='Importance', ascending=False)
+# Выбор признаков через sidebar
+st.sidebar.write("### Выберите признаки для отображения:")
+selected_features = st.sidebar.multiselect(
+    "Признаки:", importance_df['Feature'].tolist(), default=importance_df['Feature'].tolist()
+)
 
+# Фильтруем данные по выбранным признакам
+filtered_df = importance_df[importance_df['Feature'].isin(selected_features)]
+
+# Построение графика
+st.write('### Важность признаков')
 fig, ax = plt.subplots(figsize=(10, 6))
-ax.barh(importance_df['Feature'], importance_df['Importance'], color='purple')
+ax.barh(filtered_df['Feature'], filtered_df['Importance'], color='purple')
 ax.set_xlabel('Importance')
 ax.set_ylabel('Features')
 ax.set_title('Feature Importance')
-ax.invert_yaxis() 
+ax.invert_yaxis()  # Самые важные признаки вверху
+
+# Отображение графика
 st.pyplot(fig)
 
 # Гистограмма предсказанных вероятностей
