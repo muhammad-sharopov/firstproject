@@ -180,8 +180,8 @@ for name, model in models.items():
     })], ignore_index=True)
     
     cross_validation_scores = cross_val_score(estimator=model,
-                                              X=X_train,
-                                              y=y_train,
+                                              X=X_train.sample(7000, random_state=42),
+                                              y=y_train.sample(7000, random_state=42),
                                               scoring='accuracy',
                                               n_jobs=-1,
                                               cv=3
