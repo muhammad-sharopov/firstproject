@@ -159,6 +159,7 @@ models = {
     'XGBoost': xgb.XGBClassifier(n_estimators=100, random_state=42)
 }
 
+models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
 # Результаты модели
 results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC'])
 
@@ -179,6 +180,11 @@ for name, model in models.items():
         'Test ROC AUC': [test_roc_auc]
     })], ignore_index=True)
     
+    
+
+st.write(results)
+
+for name, model in models_for_cv.items():
     cross_validation_scores = cross_val_score(estimator=model,
                                               X=X_train.sample(7000, random_state=42),
                                               y=y_train.sample(7000, random_state=42),
@@ -187,8 +193,6 @@ for name, model in models.items():
                                               cv=3
                                               )
     st.write(f'Кросс-валидация {name} на (Accuracy): {cross_validation_scores.mean()}')
-
-st.write(results)
 
 # ROC кривая
 st.sidebar.write("### Выберите модели для отображения:")
@@ -201,7 +205,7 @@ fig = go.Figure()
 
 for name in selected_models:
     model = models[name]
-    model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
+    model.fit(X_train.sample(7000, random_state=42), y_train.sample(7000, random_state=42))
     
     y_proba = model.predict_proba(X_test)[:, 1]
     
