@@ -163,15 +163,15 @@ models = {
     'XGBoost': xgb.XGBClassifier(),
     'Gradient Boosting': GradientBoostingClassifier()  # Добавили Gradient Boosting
 }
-models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
+
 # Гиперпараметры для разных моделей
 selected_model = st.sidebar.selectbox("Выберите модель", options=list(models.keys()))
 
+# Гиперпараметры для моделей
 if selected_model == 'Logistic Regression':
     C = st.sidebar.slider("C", min_value=0.001, max_value=10.0, step=0.001, value=1.0)
     penalty = st.sidebar.selectbox("Penalty", options=['l1', 'l2'])
     solver = st.sidebar.selectbox("Solver", options=['lbfgs', 'liblinear'])
-    model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
 
 elif selected_model == 'Random Forest':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
@@ -179,35 +179,41 @@ elif selected_model == 'Random Forest':
     min_samples_split = st.sidebar.slider("Min Samples Split", min_value=2, max_value=10, step=1, value=2)
     min_samples_leaf = st.sidebar.slider("Min Samples Leaf", min_value=1, max_value=10, step=1, value=1)
     max_features = st.sidebar.selectbox("Max Features", options=['sqrt', 'log2', None])
-    model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
-                                   min_samples_leaf=min_samples_leaf, max_features=max_features, random_state=42)
 
 elif selected_model == 'XGBoost':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
     learning_rate = st.sidebar.slider("Learning Rate", min_value=0.01, max_value=0.3, step=0.01, value=0.1)
     max_depth = st.sidebar.slider("Max Depth", min_value=3, max_value=10, step=1, value=6)
-    model = xgb.XGBClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
 
 elif selected_model == 'Gradient Boosting':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
     learning_rate = st.sidebar.slider("Learning Rate", min_value=0.01, max_value=0.3, step=0.01, value=0.1)
     max_depth = st.sidebar.slider("Max Depth", min_value=3, max_value=10, step=1, value=3)
-    model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
 
-# Функция для обучения моделей
+# Функция для обучения моделей с гиперпараметрами
 @st.cache_data
-def train_models():
+def train_models(selected_model, C, penalty, solver, n_estimators, learning_rate, max_depth, max_features):
     trained_models = {}
-    for name, model in models.items():
-        model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
-        trained_models[name] = model
-    return trained_models
+    if selected_model == 'Logistic Regression':
+        model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
+    elif selected_model == 'Random Forest':
+        model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, 
+                                       min_samples_split=2, min_samples_leaf=1, 
+                                       max_features=max_features, random_state=42)
+    elif selected_model == 'XGBoost':
+        model = xgb.XGBClassifier(n_estimators=n_estimators, learning_rate=learning_rate, 
+                                  max_depth=max_depth, random_state=42)
+    elif selected_model == 'Gradient Boosting':
+        model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, 
+                                           max_depth=max_depth, random_state=42)
 
-trained_models = train_models()
+    model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
+    trained_models[selected_model] = model
+    return trained_models
 
 # Функция для вычисления ROC AUC
 @st.cache_data
-def compute_roc_auc():
+def compute_roc_auc(trained_models, X_train, y_train, X_test, y_test):
     results = pd.DataFrame(columns=['Model', 'Train ROC AUC', 'Test ROC AUC'])
     for name, model in trained_models.items():
         y_train_proba = model.predict_proba(X_train.sample(10000, random_state=42))[:, 1]
@@ -222,6 +228,13 @@ def compute_roc_auc():
             'Test ROC AUC': [test_roc_auc]
         })], ignore_index=True)
     return results
+
+# Обучаем модели и вычисляем ROC AUC
+trained_models = train_models(selected_model, C, penalty, solver, n_estimators, learning_rate, max_depth, max_features)
+results = compute_roc_auc(trained_models, X_train, y_train, X_test, y_test)
+
+# Отображаем результаты
+st.write(results)
 
 # Отображаем результаты
 st.write('### Training Models and Evaluation')
