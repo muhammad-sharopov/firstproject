@@ -166,12 +166,12 @@ results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC']
 # Обучение моделей и вывод результатов кросс-валидации
 st.write('### Обучение моделей и оценка')
 for name, model in models.items():
-    model.fit(X_train, y_train)
+    model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
     
-    y_train_proba = model.predict_proba(X_train)[:, 1]
+    y_train_proba = model.predict_proba(X_train.sample(10000, random_state=42))[:, 1]
     y_test_proba = model.predict_proba(X_test)[:, 1]
     
-    train_roc_auc = roc_auc_score(y_train, y_train_proba)
+    train_roc_auc = roc_auc_score(y_train.sample(10000, random_state=42), y_train_proba)
     test_roc_auc = roc_auc_score(y_test, y_test_proba)
     
     results = pd.concat([results, pd.DataFrame({
