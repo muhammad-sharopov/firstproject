@@ -190,10 +190,16 @@ for name, model in models.items():
 st.write(results)
 
 # ROC кривая
-st.write('### ROC кривая')
-fig, ax = plt.subplots(figsize=(10, 8))
+st.sidebar.write("### Выберите модели для отображения:")
+selected_models = st.sidebar.multiselect(
+    "Модели:", list(models.keys()), default=list(models.keys())
+)
 
-for name, model in models.items():
+# Создание интерактивного ROC-графика
+fig = go.Figure()
+
+for name in selected_models:
+    model = models[name]
     model.fit(X_train, y_train)
     
     y_proba = model.predict_proba(X_test)[:, 1]
@@ -201,17 +207,32 @@ for name, model in models.items():
     fpr, tpr, _ = roc_curve(y_test, y_proba)
     roc_auc = auc(fpr, tpr)
     
-    ax.plot(fpr, tpr, lw=2, label=f'{name} (AUC = {roc_auc:.2f})')
+    fig.add_trace(go.Scatter(
+        x=fpr, y=tpr,
+        mode='lines',
+        name=f'{name} (AUC = {roc_auc:.2f})',
+        line=dict(width=2)
+    ))
 
-ax.plot([0, 1], [0, 1], color='black', linestyle='--')
+# Добавляем линию случайного угадывания
+fig.add_trace(go.Scatter(
+    x=[0, 1], y=[0, 1],
+    mode='lines',
+    name='Random Guess',
+    line=dict(dash='dash', color='black')
+))
 
-ax.set_xlabel('False Positive Rate')
-ax.set_ylabel('True Positive Rate')
-ax.set_title('Receiver Operating Characteristic (ROC)')
-ax.legend(loc='lower right')
-ax.grid(True)
+# Настройки графика
+fig.update_layout(
+    title="Receiver Operating Characteristic (ROC) Curve",
+    xaxis_title="False Positive Rate",
+    yaxis_title="True Positive Rate",
+    legend=dict(x=0.8, y=0.2),
+    template="plotly_white"
+)
 
-st.pyplot(fig)
+# Отображение графика
+st.plotly_chart(fig)
 
 # Важность признаков
 st.write('### Важность признаков')
