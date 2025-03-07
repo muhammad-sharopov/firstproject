@@ -292,15 +292,14 @@ st.pyplot(fig)
 selected_model_name = st.sidebar.selectbox("Выберите модель:", list(models.keys()))
 model = models[selected_model_name]
 
-# ✅ Кешируем обучение и предсказания
-@st.cache_data
-def get_predictions(model):
-    model.fit(X_train.sample(7000, random_state=42), y_train.sample(7000, random_state=42))
-    return model.predict_proba(X_test)[:, 1]
+@functools.lru_cache(maxsize=5)
+def get_predictions(model_name):
+    temp_model = models[model_name]  
+    temp_model.fit(X_train.sample(7000, random_state=42), y_train.sample(7000, random_state=42))
+    return temp_model.predict_proba(X_test)[:, 1]
 
-y_prob = get_predictions(model)
+y_prob = get_predictions(selected_model_name) 
 
-# ✅ Гистограмма предсказанных вероятностей
 st.write('### Гистограмма предсказанных вероятностей')
 
 fig, ax = plt.subplots(figsize=(8, 6))
