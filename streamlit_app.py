@@ -210,24 +210,31 @@ cv_scores = cross_validation_results()
 for name, score in cv_scores.items():
     st.write(f'Кросс-валидация {name} на (Accuracy): {score}')
 
-# ROC кривая
+@st.cache_data
+def train_and_get_roc_data():
+    roc_data = {}
+    for name, model in models.items():
+        model.fit(X_train.sample(7000, random_state=42), y_train.sample(7000, random_state=42))
+        y_proba = model.predict_proba(X_test)[:, 1]
+        fpr, tpr, _ = roc_curve(y_test, y_proba)
+        roc_auc = auc(fpr, tpr)
+        roc_data[name] = (fpr, tpr, roc_auc)
+    return roc_data
+
+# ✅ Получаем сохраненные данные
+roc_data = train_and_get_roc_data()
+
+# ✅ Выбор моделей через sidebar
 st.sidebar.write("### Выберите модели для отображения:")
 selected_models = st.sidebar.multiselect(
     "Модели:", list(models.keys()), default=list(models.keys())
 )
 
-# Создание интерактивного ROC-графика
+# ✅ Создание интерактивного ROC-графика
 fig = go.Figure()
 
 for name in selected_models:
-    model = models[name]
-    model.fit(X_train.sample(7000, random_state=42), y_train.sample(7000, random_state=42))
-    
-    y_proba = model.predict_proba(X_test)[:, 1]
-    
-    fpr, tpr, _ = roc_curve(y_test, y_proba)
-    roc_auc = auc(fpr, tpr)
-    
+    fpr, tpr, roc_auc = roc_data[name]
     fig.add_trace(go.Scatter(
         x=fpr, y=tpr,
         mode='lines',
@@ -235,7 +242,7 @@ for name in selected_models:
         line=dict(width=2)
     ))
 
-# Добавляем линию случайного угадывания
+# ✅ Линия случайного угадывания
 fig.add_trace(go.Scatter(
     x=[0, 1], y=[0, 1],
     mode='lines',
@@ -243,7 +250,7 @@ fig.add_trace(go.Scatter(
     line=dict(dash='dash', color='black')
 ))
 
-# Настройки графика
+# ✅ Настройки графика
 fig.update_layout(
     title="Receiver Operating Characteristic (ROC) Curve",
     xaxis_title="False Positive Rate",
@@ -252,7 +259,7 @@ fig.update_layout(
     template="plotly_white"
 )
 
-# Отображение графика
+# ✅ Отображение графика
 st.plotly_chart(fig)
 
 @st.cache_data
