@@ -159,6 +159,8 @@ st.sidebar.header("Настройки моделей")
 # Sidebar model selection
 # Исправленный код для Streamlit
 
+# Исправленный код для Streamlit
+
 models = {
     'Logistic Regression': LogisticRegression(),
     'Random Forest': RandomForestClassifier(),
@@ -204,7 +206,7 @@ elif selected_model == 'Gradient Boosting':
     model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, random_state=42)
 
 # Функция для обучения модели с параметрами
-@st.experimental_memo
+@st.cache_data
 def train_models(selected_model, C, penalty, solver, n_estimators, learning_rate, max_depth, max_features):
     trained_models = {}
     if selected_model == 'Logistic Regression':
@@ -227,7 +229,7 @@ def train_models(selected_model, C, penalty, solver, n_estimators, learning_rate
 trained_models = train_models(selected_model, C, penalty, solver, n_estimators, learning_rate, max_depth, max_features)
 
 # Функция для вычисления ROC AUC
-@st.experimental_memo
+@st.cache_data
 def compute_roc_auc(_trained_models, X_train, y_train, X_test, y_test):
     results = pd.DataFrame(columns=['Model', 'Train ROC AUC', 'Test ROC AUC'])
     for name, model in _trained_models.items():
