@@ -221,16 +221,13 @@ def train_and_get_roc_data():
         roc_data[name] = (fpr, tpr, roc_auc)
     return roc_data
 
-# ✅ Получаем сохраненные данные
 roc_data = train_and_get_roc_data()
 
-# ✅ Выбор моделей через sidebar
 st.sidebar.write("### Выберите модели для отображения:")
 selected_models = st.sidebar.multiselect(
     "Модели:", list(models.keys()), default=list(models.keys())
 )
 
-# ✅ Создание интерактивного ROC-графика
 fig = go.Figure()
 
 for name in selected_models:
@@ -242,7 +239,6 @@ for name in selected_models:
         line=dict(width=2)
     ))
 
-# ✅ Линия случайного угадывания
 fig.add_trace(go.Scatter(
     x=[0, 1], y=[0, 1],
     mode='lines',
@@ -250,7 +246,6 @@ fig.add_trace(go.Scatter(
     line=dict(dash='dash', color='black')
 ))
 
-# ✅ Настройки графика
 fig.update_layout(
     title="Receiver Operating Characteristic (ROC) Curve",
     xaxis_title="False Positive Rate",
@@ -259,7 +254,6 @@ fig.update_layout(
     template="plotly_white"
 )
 
-# ✅ Отображение графика
 st.plotly_chart(fig)
 
 @st.cache_data
@@ -295,8 +289,19 @@ ax.invert_yaxis()  # Самые важные признаки вверху
 st.pyplot(fig)
 
 # Гистограмма предсказанных вероятностей
+selected_model_name = st.sidebar.selectbox("Выберите модель:", list(models.keys()))
+model = models[selected_model_name]
+
+# ✅ Кешируем обучение и предсказания
+@st.cache_data
+def get_predictions(model):
+    model.fit(X_train.sample(7000, random_state=42), y_train.sample(7000, random_state=42))
+    return model.predict_proba(X_test)[:, 1]
+
+y_prob = get_predictions(model)
+
+# ✅ Гистограмма предсказанных вероятностей
 st.write('### Гистограмма предсказанных вероятностей')
-y_prob = model.predict_proba(X_test)[:, 1]
 
 fig, ax = plt.subplots(figsize=(8, 6))
 ax.hist(y_prob[y_test == 1], bins=20, alpha=0.6, color='blue', label='Actual Yes')
