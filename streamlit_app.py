@@ -221,9 +221,9 @@ def train_models(selected_model, C, penalty, solver, n_estimators, learning_rate
 
 # Функция для вычисления ROC AUC
 @st.cache_data
-def compute_roc_auc(trained_models, X_train, y_train, X_test, y_test):
+def compute_roc_auc(_trained_models, X_train, y_train, X_test, y_test):
     results = pd.DataFrame(columns=['Model', 'Train ROC AUC', 'Test ROC AUC'])
-    for name, model in trained_models.items():
+    for name, model in _trained_models.items():
         y_train_proba = model.predict_proba(X_train.sample(10000, random_state=42))[:, 1]
         y_test_proba = model.predict_proba(X_test)[:, 1]
 
