@@ -288,7 +288,7 @@ ax.invert_yaxis()  # Самые важные признаки вверху
 
 # Отображение графика
 st.pyplot(fig)
-
+'''
 # Гистограмма предсказанных вероятностей
 selected_model_name = st.sidebar.selectbox("Выберите модель:", list(models.keys()))
 model = models[selected_model_name]
@@ -310,4 +310,4 @@ ax.set_xlabel('Предсказанная вероятность')
 ax.set_ylabel('Частота')
 ax.set_title('Гистограмма предсказанных вероятностей')
 ax.legend(loc='upper center')
-st.pyplot(fig)
+st.pyplot(fig)'''
