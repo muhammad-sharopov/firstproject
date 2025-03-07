@@ -153,14 +153,28 @@ y = data['Depression']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 # Инициализация моделей
-models = {
-    'Random Forest': RandomForestClassifier(n_estimators=80, random_state=42),
-    'Gradient Boosting': GradientBoostingClassifier(random_state=42),
-    'Logistic Regression': LogisticRegression(random_state=42),
-    'XGBoost': xgb.XGBClassifier(n_estimators=100, random_state=42)
-}
+st.sidebar.header("Настройки моделей")
 
-models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
+n_estimators_rf = st.sidebar.slider("Random Forest: n_estimators", 50, 200, 80, 10)
+n_estimators_xgb = st.sidebar.slider("XGBoost: n_estimators", 50, 200, 100, 10)
+learning_rate_gb = st.sidebar.slider("Gradient Boosting: learning_rate", 0.01, 0.3, 0.1, 0.01)
+
+st.sidebar.write("### Выбор модели")
+use_random_forest = st.sidebar.checkbox("Random Forest", True)
+use_gradient_boosting = st.sidebar.checkbox("Gradient Boosting", True)
+use_logistic_regression = st.sidebar.checkbox("Logistic Regression", True)
+use_xgboost = st.sidebar.checkbox("XGBoost", True)
+
+# Определение моделей с выбранными параметрами
+models = {}
+if use_random_forest:
+    models['Random Forest'] = RandomForestClassifier(n_estimators=n_estimators_rf, random_state=42)
+if use_gradient_boosting:
+    models['Gradient Boosting'] = GradientBoostingClassifier(learning_rate=learning_rate_gb, random_state=42)
+if use_logistic_regression:
+    models['Logistic Regression'] = LogisticRegression(random_state=42)
+if use_xgboost:
+    models['XGBoost'] = xgb.XGBClassifier(n_estimators=n_estimators_xgb, random_state=42)
 
 @st.cache_resource
 def train_models():
@@ -195,7 +209,7 @@ st.write(compute_roc_auc())
 @st.cache_data
 def cross_validation_results():
     cv_results = {}
-    for name, model in models_for_cv.items():
+    for name, model in models.items():
         scores = cross_val_score(
             estimator=model,
             X=X_train.sample(7000, random_state=42),
@@ -210,6 +224,7 @@ def cross_validation_results():
 cv_scores = cross_validation_results()
 for name, score in cv_scores.items():
     st.write(f'Кросс-валидация {name} на (Accuracy): {score}')
+
 
 @st.cache_data
 def train_and_get_roc_data():
