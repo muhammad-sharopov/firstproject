@@ -339,3 +339,45 @@ ax.set_ylabel('Частота')
 ax.set_title('Гистограмма предсказанных вероятностей')
 ax.legend(loc='upper center')
 st.pyplot(fig)
+
+
+
+
+
+
+st.write('### Подбор гиперпараметров для модели Gradient Boosting')
+
+# Define the parameter grid for Gradient Boosting
+param_grid = {
+    'n_estimators': [50, 100, 150, 200],
+    'learning_rate': [0.001, 0.01, 0.1, 0.2],
+    'max_depth': [3, 5, 7, 10],
+    'subsample': [0.8, 0.9, 1.0],
+    'min_samples_split': [2, 5, 10]
+}
+
+# Initialize the Gradient Boosting model
+gb_model = GradientBoostingClassifier(random_state=42)
+
+# Initialize GridSearchCV with 5-fold cross-validation
+grid_search_gb = GridSearchCV(estimator=gb_model, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2, scoring='roc_auc')
+
+# Perform the grid search
+grid_search_gb.fit(X_train, y_train)
+
+# Best parameters found by GridSearchCV
+st.write('### Лучшие гиперпараметры для модели Gradient Boosting:')
+st.write(grid_search_gb.best_params_)
+
+# Best model from grid search
+best_gb_model = grid_search_gb.best_estimator_
+
+# Re-evaluate the best model
+st.write('### Оценка лучших гиперпараметров на тестовой выборке:')
+best_gb_model_score = best_gb_model.score(X_test, y_test)
+st.write(f'Accuracy на тестовой выборке: {best_gb_model_score:.4f}')
+
+# Calculate the ROC AUC for the best model
+y_test_proba_best_gb = best_gb_model.predict_proba(X_test)[:, 1]
+test_roc_auc_best_gb = roc_auc_score(y_test, y_test_proba_best_gb)
+st.write(f'ROC AUC на тестовой выборке для лучшей модели: {test_roc_auc_best_gb:.4f}')
