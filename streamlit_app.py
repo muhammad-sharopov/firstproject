@@ -1,4 +1,4 @@
-import pandas as pd
+    import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -166,6 +166,14 @@ models = {
 
 # Гиперпараметры для разных моделей
 selected_model = st.sidebar.selectbox("Выберите модель", options=list(models.keys()))
+
+C = None
+penalty = None
+solver = None
+n_estimators = None
+learning_rate = None
+max_depth = None
+max_features = None
 
 # Гиперпараметры для моделей
 if selected_model == 'Logistic Regression':
