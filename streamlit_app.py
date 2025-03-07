@@ -201,7 +201,7 @@ fig = go.Figure()
 
 for name in selected_models:
     model = models[name]
-    model.fit(X_train, y_train)
+    model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
     
     y_proba = model.predict_proba(X_test)[:, 1]
     
