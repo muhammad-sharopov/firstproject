@@ -13,6 +13,7 @@ from sklearn.metrics import roc_auc_score, accuracy_score, roc_curve, auc
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 import warnings
+from streamlit import caching
 
 # Отключение предупреждений
 warnings.filterwarnings('ignore')
@@ -165,7 +166,9 @@ results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC']
 
 # Обучение моделей и вывод результатов кросс-валидации
 st.write('### Обучение моделей и оценка')
-for name, model in models.items():
+
+@st.cache
+def train_and_evaluate_model(model, X_train, y_train, X_test, y_test):
     model.fit(X_train, y_train)
     
     y_train_proba = model.predict_proba(X_train)[:, 1]
@@ -174,25 +177,32 @@ for name, model in models.items():
     train_roc_auc = roc_auc_score(y_train, y_train_proba)
     test_roc_auc = roc_auc_score(y_test, y_test_proba)
     
+    return train_roc_auc, test_roc_auc
+
+for name, model in models.items():
+    train_roc_auc, test_roc_auc = train_and_evaluate_model(model, X_train, y_train, X_test, y_test)
+    
     results = pd.concat([results, pd.DataFrame({
         'Модель': [name],
         'Train ROC AUC': [train_roc_auc],
         'Test ROC AUC': [test_roc_auc]
     })], ignore_index=True)
-    
-    
 
 st.write(results)
 
+@st.cache
+def cross_validation(model, X_train, y_train):
+    return cross_val_score(estimator=model,
+                           X=X_train.sample(7000, random_state=42),
+                           y=y_train.sample(7000, random_state=42),
+                           scoring='accuracy',
+                           n_jobs=-1,
+                           cv=3
+                           ).mean()
+
 for name, model in models_for_cv.items():
-    cross_validation_scores = cross_val_score(estimator=model,
-                                              X=X_train.sample(7000, random_state=42),
-                                              y=y_train.sample(7000, random_state=42),
-                                              scoring='accuracy',
-                                              n_jobs=-1,
-                                              cv=3
-                                              )
-    st.write(f'Кросс-валидация {name} на (Accuracy): {cross_validation_scores.mean()}')
+    cross_val_mean = cross_validation(model, X_train, y_train)
+    st.write(f'Кросс-валидация {name} на (Accuracy): {cross_val_mean}')
 
 # ROC кривая
 st.sidebar.write("### Выберите модели для отображения:")
@@ -201,42 +211,46 @@ selected_models = st.sidebar.multiselect(
 )
 
 # Создание интерактивного ROC-графика
-fig = go.Figure()
+@st.cache
+def generate_roc_curve(selected_models, X_train, X_test, y_test):
+    fig = go.Figure()
 
-for name in selected_models:
-    model = models[name]
-    model.fit(X_train.sample(7000, random_state=42), y_train.sample(7000, random_state=42))
-    
-    y_proba = model.predict_proba(X_test)[:, 1]
-    
-    fpr, tpr, _ = roc_curve(y_test, y_proba)
-    roc_auc = auc(fpr, tpr)
-    
+    for name in selected_models:
+        model = models[name]
+        model.fit(X_train.sample(7000, random_state=42), y_train.sample(7000, random_state=42))
+
+        y_proba = model.predict_proba(X_test)[:, 1]
+
+        fpr, tpr, _ = roc_curve(y_test, y_proba)
+        roc_auc = auc(fpr, tpr)
+
+        fig.add_trace(go.Scatter(
+            x=fpr, y=tpr,
+            mode='lines',
+            name=f'{name} (AUC = {roc_auc:.2f})',
+            line=dict(width=2)
+        ))
+
+    # Добавляем линию случайного угадывания
     fig.add_trace(go.Scatter(
-        x=fpr, y=tpr,
+        x=[0, 1], y=[0, 1],
         mode='lines',
-        name=f'{name} (AUC = {roc_auc:.2f})',
-        line=dict(width=2)
+        name='Random Guess',
+        line=dict(dash='dash', color='black')
     ))
 
-# Добавляем линию случайного угадывания
-fig.add_trace(go.Scatter(
-    x=[0, 1], y=[0, 1],
-    mode='lines',
-    name='Random Guess',
-    line=dict(dash='dash', color='black')
-))
+    # Настройки графика
+    fig.update_layout(
+        title="Receiver Operating Characteristic (ROC) Curve",
+        xaxis_title="False Positive Rate",
+        yaxis_title="True Positive Rate",
+        legend=dict(x=0.8, y=0.2),
+        template="plotly_white"
+    )
 
-# Настройки графика
-fig.update_layout(
-    title="Receiver Operating Characteristic (ROC) Curve",
-    xaxis_title="False Positive Rate",
-    yaxis_title="True Positive Rate",
-    legend=dict(x=0.8, y=0.2),
-    template="plotly_white"
-)
+    return fig
 
-# Отображение графика
+fig = generate_roc_curve(selected_models, X_train, X_test, y_test)
 st.plotly_chart(fig)
 
 # Важность признаков
@@ -260,10 +274,8 @@ st.write('### Гистограмма предсказанных вероятно
 y_prob = model.predict_proba(X_test)[:, 1]
 
 fig, ax = plt.subplots(figsize=(8, 6))
-ax.hist(y_prob[y_test == 1], bins=20, alpha=0.6, color='blue', label='Actual Yes')
-ax.hist(y_prob[y_test == 0], bins=20, alpha=0.6, color='red', label='Actual No')
-ax.set_xlabel('Предсказанная вероятность')
-ax.set_ylabel('Частота')
-ax.set_title('Гистограмма предсказанных вероятностей')
-ax.legend(loc='upper center')
+ax.hist(y_prob, bins=20, color='skyblue', edgecolor='black')
+ax.set_xlabel('Предсказанные вероятности')
+ax.set_ylabel('Количество')
+ax.set_title('Распределение предсказанных вероятностей депрессии')
 st.pyplot(fig)
