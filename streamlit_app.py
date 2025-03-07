@@ -186,7 +186,7 @@ for name, model in models.items():
                                               n_jobs=-1,
                                               cv=5
                                               )
-    st.write(f'Кросс-валидация {name}: {cross_validation_scores.mean()}')
+    st.write(f'Кросс-валидация {name} на (Accuracy): {cross_validation_scores.mean()}')
 
 st.write(results)
 
