@@ -168,7 +168,6 @@ models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
 # Sidebar model selection
 models = {
     'Logistic Regression': LogisticRegression(),
-    'KNeighborsClassifier': KNeighborsClassifier(),
     'Random Forest': RandomForestClassifier(),
     'XGBoost': xgb.XGBClassifier(),
     'Gradient Boosting': GradientBoostingClassifier()  # Добавили Gradient Boosting
@@ -182,12 +181,6 @@ if selected_model == 'Logistic Regression':
     penalty = st.sidebar.selectbox("Penalty", options=['l1', 'l2'])
     solver = st.sidebar.selectbox("Solver", options=['lbfgs', 'liblinear'])
     model = LogisticRegression(C=C, penalty=penalty, solver=solver, random_state=42)
-
-elif selected_model == 'KNeighborsClassifier':
-    n_neighbors = st.sidebar.slider("n_neighbors", min_value=1, max_value=20, step=1, value=5)
-    weights = st.sidebar.selectbox("Weights", options=['uniform', 'distance'])
-    metric = st.sidebar.selectbox("Metric", options=['minkowski', 'euclidean', 'manhattan'])
-    model = KNeighborsClassifier(n_neighbors=n_neighbors, weights=weights, metric=metric)
 
 elif selected_model == 'Random Forest':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
