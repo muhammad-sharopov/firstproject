@@ -155,34 +155,49 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Инициализация моделей
 st.sidebar.header("Настройки моделей")
 
-n_estimators_rf = st.sidebar.slider("Random Forest: n_estimators", 50, 200, 80, 10)
-n_estimators_xgb = st.sidebar.slider("XGBoost: n_estimators", 50, 200, 100, 10)
-learning_rate_gb = st.sidebar.slider("Gradient Boosting: learning_rate", 0.01, 0.3, 0.1, 0.01)
+model_params = {
+    'Random Forest': {
+        'n_estimators': st.sidebar.slider('Количество деревьев', 10, 200, 80, 10),
+        'max_depth': st.sidebar.slider('Максимальная глубина', 2, 20, 10),
+        'random_state': 42
+    },
+    'Gradient Boosting': {
+        'n_estimators': st.sidebar.slider('Количество деревьев', 10, 200, 100, 10),
+        'learning_rate': st.sidebar.slider('Скорость обучения', 0.01, 0.3, 0.1, 0.01),
+        'max_depth': st.sidebar.slider('Максимальная глубина', 2, 20, 3),
+        'random_state': 42
+    },
+    'Logistic Regression': {
+        'C': st.sidebar.slider('Регуляризация (C)', 0.01, 10.0, 1.0, 0.01),
+        'random_state': 42
+    },
+    'XGBoost': {
+        'n_estimators': st.sidebar.slider('Количество деревьев', 10, 200, 100, 10),
+        'learning_rate': st.sidebar.slider('Скорость обучения', 0.01, 0.3, 0.1, 0.01),
+        'max_depth': st.sidebar.slider('Максимальная глубина', 2, 20, 6),
+        'random_state': 42
+    }
+}
 
-st.sidebar.write("### Выбор модели")
-use_random_forest = st.sidebar.checkbox("Random Forest", True)
-use_gradient_boosting = st.sidebar.checkbox("Gradient Boosting", True)
-use_logistic_regression = st.sidebar.checkbox("Logistic Regression", True)
-use_xgboost = st.sidebar.checkbox("XGBoost", True)
+# Выбор модели
+selected_model = st.sidebar.selectbox('Выберите модель', list(model_params.keys()))
+st.write(f'### Выбранная модель: {selected_model}')
 
-# Определение моделей с выбранными параметрами
-models = {}
-if use_random_forest:
-    models['Random Forest'] = RandomForestClassifier(n_estimators=n_estimators_rf, random_state=42)
-if use_gradient_boosting:
-    models['Gradient Boosting'] = GradientBoostingClassifier(learning_rate=learning_rate_gb, random_state=42)
-if use_logistic_regression:
-    models['Logistic Regression'] = LogisticRegression(random_state=42)
-if use_xgboost:
-    models['XGBoost'] = xgb.XGBClassifier(n_estimators=n_estimators_xgb, random_state=42)
+# Получение параметров для выбранной модели
+params = model_params[selected_model]
 
-@st.cache_resource
-def train_models():
-    trained_models = {}
-    for name, model in models.items():
-        model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
-        trained_models[name] = model
-    return trained_models
+# Инициализация модели с параметрами
+if selected_model == 'Random Forest':
+    model = RandomForestClassifier(**params)
+elif selected_model == 'Gradient Boosting':
+    model = GradientBoostingClassifier(**params)
+elif selected_model == 'Logistic Regression':
+    model = LogisticRegression(**params)
+elif selected_model == 'XGBoost':
+    model = xgb.XGBClassifier(**params)
+
+st.write(f'### Параметры модели:')
+st.json(params)
 
 trained_models = train_models()
 
