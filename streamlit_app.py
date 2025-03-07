@@ -283,8 +283,12 @@ roc_data = train_and_get_roc_data()
 # Отображаем все модели в боковой панели
 st.sidebar.write("### Выберите модели для отображения:")
 selected_models = st.sidebar.multiselect(
-    "Модели:", list(models.keys()), default=list(models.keys())
+    "Модели:", 
+    list(models.keys()), 
+    default=list(models.keys()),
+    key="model_selection" 
 )
+
 
 fig = go.Figure()
 
@@ -328,8 +332,12 @@ importance_df = compute_feature_importance()
 # Выбор признаков через sidebar
 st.sidebar.write("### Выберите признаки для отображения:")
 selected_features = st.sidebar.multiselect(
-    "Признаки:", importance_df['Feature'].tolist(), default=importance_df['Feature'].tolist()
+    "Признаки:", 
+    importance_df['Feature'].tolist(), 
+    default=importance_df['Feature'].tolist(),
+    key="feature_selection"  # Уникальный ключ для этого виджета
 )
+
 
 # Фильтруем данные по выбранным признакам
 filtered_df = importance_df[importance_df['Feature'].isin(selected_features)]
