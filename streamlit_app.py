@@ -160,39 +160,58 @@ models = {
 }
 
 models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
-# Результаты модели
-results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC'])
 
-# Обучение моделей и вывод результатов кросс-валидации
+# ✅ КЕШИРУЕМ ОБУЧЕНИЕ МОДЕЛЕЙ
+@st.cache_resource
+def train_models():
+    trained_models = {}
+    for name, model in models.items():
+        model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
+        trained_models[name] = model
+    return trained_models
+
+trained_models = train_models()
+
+# ✅ КЕШИРУЕМ ROC AUC
+@st.cache_data
+def compute_roc_auc():
+    results = pd.DataFrame(columns=['Модель', 'Train ROC AUC', 'Test ROC AUC'])
+    for name, model in trained_models.items():
+        y_train_proba = model.predict_proba(X_train.sample(10000, random_state=42))[:, 1]
+        y_test_proba = model.predict_proba(X_test)[:, 1]
+
+        train_roc_auc = roc_auc_score(y_train.sample(10000, random_state=42), y_train_proba)
+        test_roc_auc = roc_auc_score(y_test, y_test_proba)
+
+        results = pd.concat([results, pd.DataFrame({
+            'Модель': [name],
+            'Train ROC AUC': [train_roc_auc],
+            'Test ROC AUC': [test_roc_auc]
+        })], ignore_index=True)
+    return results
+
 st.write('### Обучение моделей и оценка')
-for name, model in models.items():
-    model.fit(X_train.sample(10000, random_state=42), y_train.sample(10000, random_state=42))
-    
-    y_train_proba = model.predict_proba(X_train.sample(10000, random_state=42))[:, 1]
-    y_test_proba = model.predict_proba(X_test)[:, 1]
-    
-    train_roc_auc = roc_auc_score(y_train.sample(10000, random_state=42), y_train_proba)
-    test_roc_auc = roc_auc_score(y_test, y_test_proba)
-    
-    results = pd.concat([results, pd.DataFrame({
-        'Модель': [name],
-        'Train ROC AUC': [train_roc_auc],
-        'Test ROC AUC': [test_roc_auc]
-    })], ignore_index=True)
-    
-    
+st.write(compute_roc_auc())
 
-st.write(results)
+# ✅ КЕШИРУЕМ КРОСС-ВАЛИДАЦИЮ
+@st.cache_data
+def cross_validation_results():
+    cv_results = {}
+    for name, model in models_for_cv.items():
+        scores = cross_val_score(
+            estimator=model,
+            X=X_train.sample(7000, random_state=42),
+            y=y_train.sample(7000, random_state=42),
+            scoring='accuracy',
+            n_jobs=-1,
+            cv=3
+        )
+        cv_results[name] = scores.mean()
+    return cv_results
 
-for name, model in models_for_cv.items():
-    cross_validation_scores = cross_val_score(estimator=model,
-                                              X=X_train.sample(7000, random_state=42),
-                                              y=y_train.sample(7000, random_state=42),
-                                              scoring='accuracy',
-                                              n_jobs=-1,
-                                              cv=3
-                                              )
-    st.write(f'Кросс-валидация {name} на (Accuracy): {cross_validation_scores.mean()}')
+cv_scores = cross_validation_results()
+for name, score in cv_scores.items():
+    st.write(f'Кросс-валидация {name} на (Accuracy): {score}')
 
 # ROC кривая
 st.sidebar.write("### Выберите модели для отображения:")
