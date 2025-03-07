@@ -183,11 +183,12 @@ elif selected_model == 'KNeighborsClassifier':
     model = KNeighborsClassifier(n_neighbors=n_neighbors, weights=weights, metric=metric)
 
 # Hyperparameters for RandomForestClassifier
+# Hyperparameters for RandomForestClassifier using sliders
 elif selected_model == 'Random Forest':
     n_estimators = st.sidebar.slider("n_estimators", min_value=50, max_value=500, step=50, value=100)
-    max_depth = st.sidebar.selectbox("Max Depth", options=[None, 3, 5, 7, 10])
-    min_samples_split = st.sidebar.selectbox("Min Samples Split", options=[2, 5, 10])
-    min_samples_leaf = st.sidebar.selectbox("Min Samples Leaf", options=[1, 2, 5, 10])
+    max_depth = st.sidebar.slider("Max Depth", min_value=1, max_value=10, step=1, value=7)
+    min_samples_split = st.sidebar.slider("Min Samples Split", min_value=2, max_value=10, step=1, value=2)
+    min_samples_leaf = st.sidebar.slider("Min Samples Leaf", min_value=1, max_value=10, step=1, value=1)
     max_features = st.sidebar.selectbox("Max Features", options=['sqrt', 'log2', None])
     model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
                                    min_samples_leaf=min_samples_leaf, max_features=max_features, random_state=42)
