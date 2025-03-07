@@ -155,15 +155,6 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Инициализация моделей
 st.sidebar.header("Настройки моделей")
 
-models = {
-    'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42),
-    'Gradient Boosting': GradientBoostingClassifier(random_state=42),
-    'Logistic Regression': LogisticRegression(random_state=42),
-    'XGBoost': xgb.XGBClassifier(n_estimators=100, random_state=42)
-}
-
-# Models for cross-validation (excluding XGBoost)
-models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
 
 # Sidebar model selection
 models = {
@@ -172,7 +163,7 @@ models = {
     'XGBoost': xgb.XGBClassifier(),
     'Gradient Boosting': GradientBoostingClassifier()  # Добавили Gradient Boosting
 }
-
+models_for_cv = {k: v for k, v in models.items() if k != 'XGBoost'}
 # Гиперпараметры для разных моделей
 selected_model = st.sidebar.selectbox("Выберите модель", options=list(models.keys()))
 
